@@ -95,11 +95,11 @@ class Character(Static):
 
         scene_lines = []
 
-        # SKY - sun at top left, clouds scattered across the screen
+        # SKY - sun at top left, clouds widely scattered
         scene_lines.append("  ☀️")
-        scene_lines.append("                         ☁️")
-        scene_lines.append("  " + " " * 50 + "☁️")
-        scene_lines.append("              ☁️" + " " * 30 + "☁️")
+        scene_lines.append(" " * 30 + "☁️")
+        scene_lines.append(" " * 60 + "☁️")
+        scene_lines.append(" " * 15 + "☁️" + " " * 50 + "☁️")
 
         # More space between sky and character (makes sky feel higher)
         scene_lines.append("")
@@ -241,9 +241,18 @@ class TamagotchiApp(App):
             self.update_emotion()
 
     def check_health(self):
+        """Health decreases when starving, regenerates when well-fed"""
         bottom = self.query_one("#bottom", BottomBar)
+
+        # Lose health when starving
         if bottom.hunger == 0 and random.random() < 0.4:
             bottom.health = max(0, bottom.health - 1)
+            self.state["health"] = bottom.health
+            self.update_emotion()
+
+        # Slowly regain health when well-fed (hunger >= 3)
+        elif bottom.hunger >= 3 and bottom.health < 4 and random.random() < 0.3:
+            bottom.health = min(4, bottom.health + 1)
             self.state["health"] = bottom.health
             self.update_emotion()
 
