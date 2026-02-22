@@ -89,21 +89,39 @@ class Character(Static):
             return "  .-.\n (o.o)\n  > ^" if self.char_frame == 0 else "  .-.\n (o.o)\n  ^ <"
 
     def render(self) -> str:
-        """Render cute character centered"""
+        """Render cute character with environment"""
         sprite = self.get_sprite()
-        lines = sprite.split('\n')
+        char_lines = sprite.split('\n')
 
-        # Center each line with offset for movement
-        centered_lines = []
-        for line in lines:
-            # Center in 80-char width, then apply x_offset
+        # Build the scene with environment
+        scene_lines = []
+
+        # Line 0-1: Sky with sun and clouds
+        scene_lines.append("  ☀️      ☁️             ☁️                    ☁️")
+        scene_lines.append("")
+
+        # Lines 2-7: Empty space for atmosphere
+        for _ in range(6):
+            scene_lines.append("")
+
+        # Lines 8-10: Character area (centered with offset)
+        for line in char_lines:
             padding = 40 - len(line) // 2 + self.x_offset
-            centered_lines.append(' ' * max(0, padding) + line)
+            scene_lines.append(' ' * max(0, padding) + line)
 
-        # Add vertical centering (put character in middle of screen)
-        vertical_padding = '\n' * 8  # Push down from top
+        # Lines 11-15: More space below
+        for _ in range(5):
+            scene_lines.append("")
 
-        return vertical_padding + '\n'.join(centered_lines)
+        # Line 16: Ground with flowers and tree
+        scene_lines.append("                   🌸      🌸          🌳")
+
+        # Center all lines
+        centered = []
+        for line in scene_lines:
+            centered.append(f"{line:^80}")
+
+        return '\n'.join(centered)
 
 
 class BottomBar(Static):
