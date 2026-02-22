@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Terminal Tamagotchi - Authentic retro design
+Terminal Tamagotchi - Simple and authentic
 """
 
 import json
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from textual.app import App, ComposeResult
-from textual.containers import Container, Vertical, Horizontal, Center
-from textual.widgets import Static, Label
+from textual.containers import Center
+from textual.widgets import Static
 from textual.reactive import reactive
 
 
@@ -25,10 +25,9 @@ class GameData:
             "name": "Blob",
             "age_hours": 0,
             "hunger": 4,  # 0-4 hearts
-            "happy": 4,
             "health": 4,
             "weight": 10,
-            "discipline": 2,
+            "last_fed": datetime.now().isoformat(),
             "last_save": datetime.now().isoformat(),
         }
 
@@ -36,7 +35,6 @@ class GameData:
             try:
                 with open(self.save_file) as f:
                     loaded = json.load(f)
-                    # Merge with defaults to handle old save formats
                     return {**defaults, **{k: v for k, v in loaded.items() if k in defaults}}
             except Exception:
                 pass
@@ -50,10 +48,9 @@ class GameData:
 
 
 class TamagotchiScreen(Static):
-    """The main Tamagotchi egg-shaped screen"""
+    """The main Tamagotchi screen"""
 
     hunger = reactive(4)
-    happy = reactive(4)
     health = reactive(4)
     age = reactive(0)
     weight = reactive(10)
@@ -63,102 +60,97 @@ class TamagotchiScreen(Static):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.char_pos = 15
+        self.char_pos = 10
 
     def on_mount(self):
-        self.set_interval(0.5, self.animate_character)
-        self.set_interval(2.0, self.move_character)
+        self.set_interval(0.5, self.animate)
+        self.set_interval(3.0, self.move)
 
-    def animate_character(self):
-        self.char_frame = (self.char_frame + 1) % 4
+    def animate(self):
+        self.char_frame = (self.char_frame + 1) % 2
 
-    def move_character(self):
-        if random.random() < 0.7:  # Sometimes move
+    def move(self):
+        if random.random() < 0.6:
             direction = random.choice([-1, 1])
-            self.char_pos = max(0, min(25, self.char_pos + direction))
+            self.char_pos = max(5, min(15, self.char_pos + direction))
 
-    def get_character(self) -> str:
-        """Get character sprite based on emotion"""
-        sprites = {
-            "normal": [
-                "  .-.\n (o.o)\n  > ^",
-                "  .-.\n (o.o)\n  ^ <",
-            ],
-            "happy": [
-                "  \\o/\n (^.^)\n  > <",
-                "  \\o/\n (^o^)\n  < >",
-            ],
-            "sad": [
-                "  .-.\n (T.T)\n  ...",
-                "  .-.\n (;.;)\n  ...",
-            ],
-            "hungry": [
-                "  .-.\n (O.O)\n  ~~~",
-                "  .-.\n (@.@)\n  ~~~",
-            ],
-            "sleep": [
-                "  .-.\n (- -)\n z z z",
-                "  .-.\n (- -)\n  zzZ",
-            ],
-        }
-
-        emotion_sprites = sprites.get(self.emotion, sprites["normal"])
-        return emotion_sprites[self.char_frame % 2]
-
-    def render(self) -> str:
-        """Render the complete Tamagotchi screen"""
-
-        # Hearts display
-        heart_full = chr(0x2665)  # ♥
-        heart_empty = chr(0x2661)  # ♡
-
-        hunger_hearts = heart_full * self.hunger + heart_empty * (4 - self.hunger)
-        happy_hearts = heart_full * self.happy + heart_empty * (4 - self.happy)
-        health_hearts = heart_full * self.health + heart_empty * (4 - self.health)
-
-        # Get character with position
-        char_lines = self.get_character().split('\n')
-        char_padding = ' ' * self.char_pos
-        positioned_char = '\n'.join(char_padding + line for line in char_lines)
-
-        # Build the screen
-        screen = f"""
-        .-=========================================-.
-       /                                             \\
-      |   {self.name} - Age: {self.age}h            |
-      |                                               |
-      |                                               |
-      |  {positioned_char.split(chr(10))[0] if len(positioned_char.split(chr(10))) > 0 else ''}                |
-      |  {positioned_char.split(chr(10))[1] if len(positioned_char.split(chr(10))) > 1 else ''}                |
-      |  {positioned_char.split(chr(10))[2] if len(positioned_char.split(chr(10))) > 2 else ''}                |
-      |                                               |
-      | =========================================     |
-      |                                               |
-      |  HUNGRY: {hunger_hearts}    HAPPY: {happy_hearts}     |
-      |  HEALTH: {health_hearts}    WT: {self.weight:02d}kg      |
-      |                                               |
-       \\                                             /
-        '-==========================================-'
-"""
-        return screen
-
-
-class InfoPanel(Static):
-    """Side information panel"""
+    def get_character(self) -> list:
+        """Get character sprite lines"""
+        if self.emotion == "happy":
+            return [
+                "  \\o/",
+                " (^.^)",
+                "  > <"
+            ] if self.char_frame == 0 else [
+                "  \\o/",
+                " (^o^)",
+                "  < >"
+            ]
+        elif self.emotion == "hungry":
+            return [
+                "  .-.",
+                " (O.O)",
+                "  ~~~"
+            ] if self.char_frame == 0 else [
+                "  .-.",
+                " (@.@)",
+                "  > <"
+            ]
+        elif self.emotion == "sick":
+            return [
+                "  .-.",
+                " (X.X)",
+                "  ..."
+            ]
+        elif self.emotion == "sleep":
+            return [
+                "  .-.",
+                " (- -)",
+                " z z z"
+            ]
+        else:  # normal
+            return [
+                "  .-.",
+                " (o.o)",
+                "  > ^"
+            ] if self.char_frame == 0 else [
+                "  .-.",
+                " (o.o)",
+                "  ^ <"
+            ]
 
     def render(self) -> str:
-        return """
-[bold cyan]CONTROLS:[/bold cyan]
-  F - Feed
-  P - Play
-  L - Light (sleep)
-  M - Medicine
-  C - Clean
+        """Render the Tamagotchi screen"""
 
-  Q - Quit
+        # Get character
+        char = self.get_character()
+        padding = ' ' * self.char_pos
 
-[dim]Stats update every
-few seconds...[/dim]
+        # Hearts
+        hf = chr(0x2665)  # ♥
+        he = chr(0x2661)  # ♡
+        hunger_h = hf * self.hunger + he * (4 - self.hunger)
+        health_h = hf * self.health + he * (4 - self.health)
+
+        # Build screen - compact and aligned
+        return f"""
+      .----------------------.
+     /                        \\
+    |    {self.name} - {self.age}h old    |
+    |                          |
+    |                          |
+    |  {padding}{char[0]}           |
+    |  {padding}{char[1]}           |
+    |  {padding}{char[2]}           |
+    |                          |
+    |  --------------------    |
+    |                          |
+    |  HUNGER: {hunger_h}         |
+    |  HEALTH: {health_h}         |
+    |  WEIGHT: {self.weight:2d} kg         |
+    |                          |
+     \\                        /
+      '----------------------'
 """
 
 
@@ -171,33 +163,19 @@ class TamagotchiApp(App):
         background: $surface;
     }
 
-    #main {
+    TamagotchiScreen {
         width: auto;
         height: auto;
-    }
-
-    TamagotchiScreen {
-        width: 100%;
         color: #00ff00;
         background: #000000;
-        border: heavy #00ff00;
-    }
-
-    InfoPanel {
-        width: 30;
-        margin-left: 2;
-        padding: 1;
-        border: solid cyan;
+        padding: 1 2;
     }
     """
 
     BINDINGS = [
-        ("f", "feed", "Feed"),
-        ("p", "play", "Play"),
-        ("l", "light", "Light"),
-        ("m", "medicine", "Medicine"),
-        ("c", "clean", "Clean"),
-        ("q", "quit", "Quit"),
+        ("f", "feed", "Feed (F)"),
+        ("space", "feed", "Feed (Space)"),
+        ("q", "quit", "Quit (Q)"),
     ]
 
     def __init__(self):
@@ -207,101 +185,98 @@ class TamagotchiApp(App):
 
     def compose(self) -> ComposeResult:
         with Center():
-            with Horizontal(id="main"):
-                yield TamagotchiScreen(id="screen")
-                yield InfoPanel()
+            yield TamagotchiScreen(id="screen")
 
     def on_mount(self):
         screen = self.query_one("#screen", TamagotchiScreen)
         screen.hunger = self.state["hunger"]
-        screen.happy = self.state["happy"]
         screen.health = self.state["health"]
         screen.age = self.state["age_hours"]
         screen.weight = self.state["weight"]
         screen.name = self.state["name"]
 
-        # Update emotion based on stats
+        # Check if need to decay from last session
+        self.calculate_decay()
         self.update_emotion()
 
-        # Game loops
-        self.set_interval(5.0, self.update_stats)
+        # Update age and stats
+        self.set_interval(60.0, self.age_tick)  # Age every minute (faster for demo)
         self.set_interval(10.0, self.save_game)
+        self.set_interval(2.0, self.check_hunger)
 
-    def update_emotion(self):
+    def calculate_decay(self):
+        """Calculate what happened while the game was closed"""
+        try:
+            last_save = datetime.fromisoformat(self.state["last_save"])
+            now = datetime.now()
+            hours_passed = (now - last_save).total_seconds() / 3600
+
+            # Lose 1 hunger per hour
+            hunger_loss = int(hours_passed)
+            screen = self.query_one("#screen", TamagotchiScreen)
+            screen.hunger = max(0, screen.hunger - hunger_loss)
+            self.state["hunger"] = screen.hunger
+        except Exception:
+            pass
+
+    def age_tick(self):
+        """Age the pet and handle hunger decay"""
+        screen = self.query_one("#screen", TamagotchiScreen)
+        screen.age += 1
+        self.state["age_hours"] = screen.age
+
+    def check_hunger(self):
+        """Check hunger and update health"""
         screen = self.query_one("#screen", TamagotchiScreen)
 
-        if screen.health < 2:
-            screen.emotion = "sad"
-        elif screen.hunger < 2:
+        # If very hungry, lose health
+        if screen.hunger == 0:
+            if random.random() < 0.3:  # Sometimes
+                screen.health = max(0, screen.health - 1)
+                self.state["health"] = screen.health
+                self.update_emotion()
+
+    def update_emotion(self):
+        """Update character emotion based on stats"""
+        screen = self.query_one("#screen", TamagotchiScreen)
+
+        if screen.health <= 1:
+            screen.emotion = "sick"
+        elif screen.hunger <= 1:
             screen.emotion = "hungry"
-        elif screen.happy > 3:
+        elif screen.hunger == 4 and screen.health == 4:
             screen.emotion = "happy"
         else:
             screen.emotion = "normal"
 
-    def update_stats(self):
-        """Decay stats over time"""
-        screen = self.query_one("#screen", TamagotchiScreen)
-
-        # Age increases
-        screen.age += 1
-        self.state["age_hours"] = screen.age
-
-        # Stats decay
-        if random.random() < 0.3:
-            screen.hunger = max(0, screen.hunger - 1)
-            self.state["hunger"] = screen.hunger
-
-        if random.random() < 0.2:
-            screen.happy = max(0, screen.happy - 1)
-            self.state["happy"] = screen.happy
-
-        self.update_emotion()
-
     def save_game(self):
+        """Save current state"""
         screen = self.query_one("#screen", TamagotchiScreen)
         self.state["hunger"] = screen.hunger
-        self.state["happy"] = screen.happy
         self.state["health"] = screen.health
         self.state["age_hours"] = screen.age
         self.state["weight"] = screen.weight
         self.game_data.save(self.state)
 
     def action_feed(self):
+        """Feed the pet"""
         screen = self.query_one("#screen", TamagotchiScreen)
-        if screen.hunger < 4:
+
+        if screen.hunger >= 4:
+            # Already full - just show happy
+            screen.emotion = "happy"
+            self.set_timer(1.0, lambda: self.update_emotion())
+        else:
+            # Feed!
             screen.hunger = min(4, screen.hunger + 1)
             screen.weight += 1
+            self.state["hunger"] = screen.hunger
             self.state["weight"] = screen.weight
-            self.update_emotion()
+            self.state["last_fed"] = datetime.now().isoformat()
 
-    def action_play(self):
-        screen = self.query_one("#screen", TamagotchiScreen)
-        if screen.happy < 4:
-            screen.happy = min(4, screen.happy + 1)
-            screen.hunger = max(0, screen.hunger - 1)
-            if screen.weight > 5:
-                screen.weight -= 1
-                self.state["weight"] = screen.weight
-            self.update_emotion()
-
-    def action_light(self):
-        screen = self.query_one("#screen", TamagotchiScreen)
-        if screen.emotion == "sleep":
-            screen.emotion = "normal"
-        else:
-            screen.emotion = "sleep"
-
-    def action_medicine(self):
-        screen = self.query_one("#screen", TamagotchiScreen)
-        if screen.health < 4:
-            screen.health = min(4, screen.health + 1)
-            self.state["health"] = screen.health
-            self.update_emotion()
-
-    def action_clean(self):
-        # Clean poop (placeholder for now)
-        pass
+            # Show happy briefly
+            screen.emotion = "happy"
+            self.set_timer(1.5, lambda: self.update_emotion())
 
 
 if __name__ == "__main__":
