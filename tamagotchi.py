@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from textual.app import App, ComposeResult
-from textual.containers import Center, Vertical
+from textual.containers import Center, Vertical, Horizontal
 from textual.widgets import Static
 from textual.reactive import reactive
 
@@ -26,7 +26,7 @@ class GameData:
             "age_hours": 0,
             "hunger": 4,
             "health": 4,
-            "weight": 10,
+            "weight": 5,  # Baby Mochi starts at 5kg
             "last_save": datetime.now().isoformat(),
         }
 
@@ -34,7 +34,10 @@ class GameData:
             try:
                 with open(self.save_file) as f:
                     loaded = json.load(f)
-                    return {**defaults, **{k: v for k, v in loaded.items() if k in defaults}}
+                    # Always reset age to 0 on load (fresh start each time)
+                    result = {**defaults, **{k: v for k, v in loaded.items() if k in defaults}}
+                    result["age_hours"] = 0  # Always start at age 0
+                    return result
             except Exception:
                 pass
 
@@ -52,35 +55,30 @@ class TamagotchiDevice(Static):
     hunger = reactive(4)
     health = reactive(4)
     age = reactive(0)
-    weight = reactive(10)
+    weight = reactive(5)
     name = reactive("Mochi")
     emotion = reactive("normal")
     char_frame = reactive(0)
     char_x = reactive(6)
-    char_y = reactive(1)  # Keep in upper area, away from tree
 
     def on_mount(self):
         self.set_interval(0.4, self.animate)
-        self.set_interval(2.0, self.move)
+        self.set_interval(2.5, self.move)
 
     def animate(self):
         self.char_frame = (self.char_frame + 1) % 2
 
     def move(self):
-        """Move character around the screen - stay in sky area only"""
+        """Move character horizontally"""
         if random.random() < 0.6:
-            # Move horizontally in the sky area (avoid tree on right)
             self.char_x = max(2, min(12, self.char_x + random.choice([-1, 0, 1])))
-            # Sometimes move vertically (stay in lines 0-2, away from ground)
-            if random.random() < 0.2:
-                self.char_y = max(0, min(2, self.char_y + random.choice([-1, 1])))
 
     def get_character(self) -> list:
         """Get character sprite lines"""
         if self.emotion == "happy":
             return ["  \\o/", " (^.^)", "  > <"] if self.char_frame == 0 else ["  \\o/", " (^o^)", "  < >"]
         elif self.emotion == "hungry":
-            return ["  .-.", " (O.O)", "  ~~~"] if self.char_frame == 0 else ["  .-.", " (@.@)", "  > <"]
+            return ["  .-.", " (O.O)", "  ~~~"]
         elif self.emotion == "sick":
             return ["  .-.", " (X.X)", "  ..."]
         elif self.emotion == "sleep":
@@ -97,38 +95,16 @@ class TamagotchiDevice(Static):
         hunger_hearts = hf * self.hunger + he * (4 - self.hunger)
         health_hearts = hf * self.health + he * (4 - self.health)
 
-        # Create environment with emojis - rich landscape
-        env_lines = [
-            "  ☀️     ☁️          ",  # Line 0: Sun and cloud
-            "      ☁️             ",  # Line 1: Cloud (Mochi roams here)
-            "                    ",  # Line 2: Sky (Mochi roams here)
-            "                    ",  # Line 3: Sky
-            "  🌸      🌸    🌳  ",  # Line 4: Flowers and tree
-            "~~~~~~~~~~~~~~~~~~~~",  # Line 5: Ground/grass
-        ]
+        # Build character lines with positioning
+        char = self.get_character()
+        char_line1 = " " * self.char_x + char[0]
+        char_line2 = " " * self.char_x + char[1]
+        char_line3 = " " * self.char_x + char[2]
 
-        # Force exact width of 20 (emojis count as 2 chars each usually)
-        env_lines = [line[:20].ljust(20) for line in env_lines]
-
-        # Place character in the environment
-        char_sprite = self.get_character()
-
-        # Position character in one of the environment lines
-        display_lines = env_lines.copy()
-        char_y_pos = min(self.char_y, len(display_lines) - 3)
-
-        for i, char_line in enumerate(char_sprite):
-            line_idx = char_y_pos + i
-            if line_idx < len(display_lines):
-                # Convert line to list for character placement
-                env_line = list(display_lines[line_idx])
-                # Place each character of the sprite
-                for j, c in enumerate(char_line.strip()):
-                    pos = self.char_x + j
-                    if 0 <= pos < 20:
-                        env_line[pos] = c
-                # Ensure EXACTLY 20 chars
-                display_lines[line_idx] = ''.join(env_line)[:20].ljust(20)
+        # Pad to exactly 20 chars
+        char_line1 = f"{char_line1[:20]:20}"
+        char_line2 = f"{char_line2[:20]:20}"
+        char_line3 = f"{char_line3[:20]:20}"
 
         # Format stats
         hunger_line = f"HUNGRY: {hunger_hearts}"
@@ -138,13 +114,12 @@ class TamagotchiDevice(Static):
         return f"""
         .-==================-.
        /                      \\
-      |  {display_lines[0]}  |
-      |  {display_lines[1]}  |
-      |  {display_lines[2]}  |
-      |  {display_lines[3]}  |
-      |  {display_lines[4]}  |
-      |  {display_lines[5]}  |
-      |                        |
+      |  ☀️  ☁️    ☁️        |
+      |  {char_line1}  |
+      |  {char_line2}  |
+      |  {char_line3}  |
+      |  🌸       🌸      🌳  |
+      |  ~~~~~~~~~~~~~~~~~~  |
       |------------------------|
       |  {hunger_line:20}  |
       |  {health_line:20}  |
@@ -163,8 +138,22 @@ class Title(Static):
     name = reactive("Mochi")
 
     def render(self) -> str:
-        # Center it to match the device width
         return f"[bold cyan]{self.name:^32}[/bold cyan]"
+
+
+class Instructions(Static):
+    """Game instructions"""
+
+    def render(self) -> str:
+        return """[dim]
+  Feed Mochi every
+  5 minutes or less!
+
+  If hungry (♡♡♡♡),
+  health drops.
+
+  Keep Mochi happy!
+[/dim]"""
 
 
 class TamagotchiApp(App):
@@ -186,7 +175,6 @@ class TamagotchiApp(App):
         color: #00ffff;
         background: #000000;
         padding: 0;
-        margin-bottom: 0;
     }
 
     TamagotchiDevice {
@@ -196,12 +184,19 @@ class TamagotchiApp(App):
         background: #000000;
         padding: 1;
     }
+
+    Instructions {
+        width: 20;
+        margin-left: 2;
+        padding: 1;
+        color: #888888;
+    }
     """
 
     BINDINGS = [
-        ("f", "feed", "Feed (F)"),
-        ("space", "feed", "Feed (Space)"),
-        ("q", "quit", "Quit (Q)"),
+        ("f", "feed", "Feed"),
+        ("space", "feed", "Feed"),
+        ("q", "quit", "Quit"),
     ]
 
     def __init__(self):
@@ -213,7 +208,9 @@ class TamagotchiApp(App):
         with Center():
             with Vertical(id="container"):
                 yield Title(id="title")
-                yield TamagotchiDevice(id="device")
+                with Horizontal():
+                    yield TamagotchiDevice(id="device")
+                    yield Instructions(id="instructions")
 
     def on_mount(self):
         title = self.query_one("#title", Title)
