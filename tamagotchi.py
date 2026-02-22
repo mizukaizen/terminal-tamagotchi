@@ -56,8 +56,8 @@ class TamagotchiDevice(Static):
     name = reactive("Mochi")
     emotion = reactive("normal")
     char_frame = reactive(0)
-    char_x = reactive(8)
-    char_y = reactive(2)
+    char_x = reactive(6)
+    char_y = reactive(1)  # Keep in upper area, away from tree
 
     def on_mount(self):
         self.set_interval(0.4, self.animate)
@@ -67,13 +67,13 @@ class TamagotchiDevice(Static):
         self.char_frame = (self.char_frame + 1) % 2
 
     def move(self):
-        """Move character around the screen"""
+        """Move character around the screen - stay in upper area"""
         if random.random() < 0.6:
-            # Move horizontally
-            self.char_x = max(1, min(14, self.char_x + random.choice([-1, 0, 1])))
-            # Sometimes move vertically
-            if random.random() < 0.3:
-                self.char_y = max(0, min(3, self.char_y + random.choice([-1, 1])))
+            # Move horizontally in the sky area
+            self.char_x = max(1, min(13, self.char_x + random.choice([-1, 0, 1])))
+            # Sometimes move vertically (but stay in sky, not on ground)
+            if random.random() < 0.2:
+                self.char_y = max(0, min(2, self.char_y + random.choice([-1, 1])))
 
     def get_character(self) -> list:
         """Get character sprite lines"""
@@ -97,14 +97,14 @@ class TamagotchiDevice(Static):
         hunger_hearts = hf * self.hunger + he * (4 - self.hunger)
         health_hearts = hf * self.health + he * (4 - self.health)
 
-        # Create environment - EXACTLY 20 chars per line (not 24, because of padding)
+        # Create environment with depth - EXACTLY 20 chars per line
         env_lines = [
-            "   o                ",  # Line 0: Sun
-            "                    ",  # Line 1: Sky
-            "      /\\            ",  # Line 2: Tree top
-            "     /  \\           ",  # Line 3: Tree mid
-            "    /____\\          ",  # Line 4: Tree base
-            "      ||            ",  # Line 5: Tree trunk
+            "  o                 ",  # Line 0: Sun in sky
+            "                    ",  # Line 1: Sky (Mochi roams here)
+            "                    ",  # Line 2: Sky (Mochi roams here)
+            "                    ",  # Line 3: Upper ground
+            " /\\  /\\        /\\  ",  # Line 4: Horizon with distant trees
+            "~~~~      ~~~~  /\\  ",  # Line 5: Ground with tree (bottom right)
         ]
 
         # Force exact width of 20
@@ -163,7 +163,7 @@ class Title(Static):
     name = reactive("Mochi")
 
     def render(self) -> str:
-        return f"\n[bold cyan]{self.name:^28}[/bold cyan]"
+        return f"[bold cyan]         {self.name}[/bold cyan]"
 
 
 class TamagotchiApp(App):
