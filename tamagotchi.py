@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Terminal Tamagotchi - Mochi Edition
+Terminal Tamagotchi - Retro Game UI
 """
 
 import json
@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from textual.app import App, ComposeResult
-from textual.containers import Center, Vertical
+from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Static
 from textual.reactive import reactive
 
@@ -48,90 +48,131 @@ class GameData:
             json.dump(data, f, indent=2)
 
 
-class TamagotchiDevice(Static):
-    """The Tamagotchi device"""
+class TopBar(Static):
+    """Top HUD bar"""
+    name = reactive("Mochi")
 
-    hunger = reactive(4)
-    health = reactive(4)
-    age = reactive(0)
-    weight = reactive(5)
+    def render(self) -> str:
+        title = f"[bold cyan]< {self.name.upper()} >[/bold cyan]"
+        controls = "[dim]Feed: [cyan]F[/cyan]  |  Quit: [cyan]Q[/cyan][/dim]"
+        # Pad to fill width
+        return f"{title:<40}{controls:>40}"
+
+
+class Character(Static):
+    """The floating character - bigger size"""
+
     emotion = reactive("normal")
     char_frame = reactive(0)
-    char_x = reactive(7)
+    x = reactive(35)
+    y = reactive(10)
 
     def on_mount(self):
         self.set_interval(0.4, self.animate)
-        self.set_interval(2.5, self.move)
+        self.set_interval(2.0, self.move)
 
     def animate(self):
         self.char_frame = (self.char_frame + 1) % 2
 
     def move(self):
-        if random.random() < 0.6:
-            self.char_x = max(4, min(10, self.char_x + random.choice([-1, 0, 1])))
+        if random.random() < 0.5:
+            self.x = max(25, min(45, self.x + random.choice([-2, -1, 0, 1, 2])))
+        if random.random() < 0.3:
+            self.y = max(8, min(14, self.y + random.choice([-1, 0, 1])))
 
-    def get_character(self) -> list:
+    def get_sprite(self) -> str:
+        """Get bigger character sprite"""
         if self.emotion == "happy":
-            return ["  \\o/", " (^.^)", "  > <"] if self.char_frame == 0 else ["  \\o/", " (^o^)", "  < >"]
+            return """
+      \\\\  //
+       \\\\//
+    .=======.
+    | ^   ^ |
+    |   v   |
+    |  \\_/  |
+    '======='
+      |   |
+     /     \\
+    """ if self.char_frame == 0 else """
+      //  \\\\
+       //\\\\
+    .=======.
+    | ^   ^ |
+    |   o   |
+    |  \\_/  |
+    '======='
+      |   |
+     /     \\
+    """
         elif self.emotion == "hungry":
-            return ["  .-.", " (O.O)", "  ~~~"]
+            return """
+    .=======.
+    | O   O |
+    |   ~   |
+    |  ___  |
+    '======='
+      |   |
+     /     \\
+    """
         elif self.emotion == "sick":
-            return ["  .-.", " (X.X)", "  ..."]
+            return """
+    .=======.
+    | X   X |
+    |   ~   |
+    |  ...  |
+    '======='
+      |   |
+     /     \\
+    """
         else:
-            return ["  .-.", " (o.o)", "  > ^"] if self.char_frame == 0 else ["  .-.", " (o.o)", "  ^ <"]
-
-    def render(self) -> str:
-        # Hearts
-        hf, he = chr(0x2665), chr(0x2661)
-        hunger_h = hf * self.hunger + he * (4 - self.hunger)
-        health_h = hf * self.health + he * (4 - self.health)
-
-        # Build character with position
-        char = self.get_character()
-        c1 = (" " * self.char_x + char[0])[:20].ljust(20)
-        c2 = (" " * self.char_x + char[1])[:20].ljust(20)
-        c3 = (" " * self.char_x + char[2])[:20].ljust(20)
-
-        # Fixed width lines
-        sky = "                    "
-        ground = "~~~~~~~~~~~~~~~~~~~~"
-
-        return f"""
-        .-==================-.
-       /                      \\
-      |  {sky}  |
-      |  {c1}  |
-      |  {c2}  |
-      |  {c3}  |
-      |  {sky}  |
-      |  {ground}  |
-      |                        |
-      |------------------------|
-      |  HUNGRY: {hunger_h:12}  |
-      |  HEALTH: {health_h:12}  |
-      |  AGE: {self.age}h WT: {self.weight}kg{' ' * (8 - len(str(self.age)) - len(str(self.weight)))}  |
-       \\                      /
-        '-==================-'
-             ___     ___
-            | F |   | Q |
-            |___|   |___|
-            FEED    QUIT
+            return """
+    .=======.
+    | o   o |
+    |   >   |
+    |  ___  |
+    '======='
+      |   |
+     /     \\
+    """ if self.char_frame == 0 else """
+    .=======.
+    | o   o |
+    |   <   |
+    |  ___  |
+    '======='
+      |   |
+     /     \\
     """
 
+    def render(self) -> str:
+        sprite = self.get_sprite().strip()
+        # Position the sprite
+        lines = sprite.split('\n')
+        positioned = []
+        for i, line in enumerate(lines):
+            # Add vertical positioning
+            if i < self.y:
+                positioned.append('')
+            else:
+                # Add horizontal positioning
+                positioned.append(' ' * self.x + line)
 
-class Title(Static):
-    """Centered title"""
-    name = reactive("Mochi")
+        return '\n'.join(positioned)
+
+
+class BottomBar(Static):
+    """Bottom HUD bar with stats"""
+
+    hunger = reactive(4)
+    health = reactive(4)
+    age = reactive(0)
+    weight = reactive(5)
 
     def render(self) -> str:
-        return f"[bold cyan]{self.name}[/bold cyan]"
+        hf, he = chr(0x2665), chr(0x2661)
+        h_hearts = hf * self.hunger + he * (4 - self.hunger)
+        hp_hearts = hf * self.health + he * (4 - self.health)
 
-
-class Instructions(Static):
-    """Bottom instructions"""
-
-    def render(self) -> str:
-        return "[dim cyan]Feed every 5min! Hungry (♡♡♡♡) = health drops[/dim cyan]"
+        return f"[cyan]HUNGRY:[/cyan] {h_hearts}  [cyan]|[/cyan]  [cyan]HEALTH:[/cyan] {hp_hearts}  [cyan]|[/cyan]  [cyan]AGE:[/cyan] {self.age}h  [cyan]|[/cyan]  [cyan]WT:[/cyan] {self.weight}kg"
 
 
 class TamagotchiApp(App):
@@ -139,30 +180,30 @@ class TamagotchiApp(App):
 
     CSS = """
     Screen {
-        align: center middle;
         background: #000000;
     }
 
-    #container {
-        align: center middle;
-    }
-
-    Title {
-        text-align: center;
-        width: 100%;
-        padding: 1 0;
-    }
-
-    TamagotchiDevice {
+    TopBar {
+        dock: top;
+        height: 1;
+        background: #000000;
         color: #00ff00;
-        background: #000000;
-        text-align: center;
+        padding: 0 2;
     }
 
-    Instructions {
+    Character {
+        height: 100%;
+        background: #000000;
+        color: #00ff00;
+    }
+
+    BottomBar {
+        dock: bottom;
+        height: 1;
+        background: #000000;
+        color: #00ff00;
         text-align: center;
-        width: 100%;
-        padding: 1 0 0 0;
+        padding: 0 2;
     }
     """
 
@@ -178,21 +219,21 @@ class TamagotchiApp(App):
         self.state = self.game_data.load()
 
     def compose(self) -> ComposeResult:
-        with Center():
-            with Vertical(id="container"):
-                yield Title(id="title")
-                yield TamagotchiDevice(id="device")
-                yield Instructions()
+        yield TopBar(id="top")
+        yield Character(id="character")
+        yield BottomBar(id="bottom")
 
     def on_mount(self):
-        title = self.query_one("#title", Title)
-        device = self.query_one("#device", TamagotchiDevice)
+        top = self.query_one("#top", TopBar)
+        char = self.query_one("#character", Character)
+        bottom = self.query_one("#bottom", BottomBar)
 
-        title.name = self.state["name"]
-        device.hunger = self.state["hunger"]
-        device.health = self.state["health"]
-        device.age = self.state["age_hours"]
-        device.weight = self.state["weight"]
+        top.name = self.state["name"]
+        char.emotion = "happy"
+        bottom.hunger = self.state["hunger"]
+        bottom.health = self.state["health"]
+        bottom.age = self.state["age_hours"]
+        bottom.weight = self.state["weight"]
 
         self.calculate_decay()
         self.update_emotion()
@@ -206,61 +247,66 @@ class TamagotchiApp(App):
         try:
             last_save = datetime.fromisoformat(self.state["last_save"])
             minutes_passed = (datetime.now() - last_save).total_seconds() / 60
-            device = self.query_one("#device", TamagotchiDevice)
-            device.hunger = max(0, device.hunger - int(minutes_passed / 5))
-            self.state["hunger"] = device.hunger
+            bottom = self.query_one("#bottom", BottomBar)
+            bottom.hunger = max(0, bottom.hunger - int(minutes_passed / 5))
+            self.state["hunger"] = bottom.hunger
         except Exception:
             pass
 
     def age_tick(self):
-        device = self.query_one("#device", TamagotchiDevice)
-        device.age += 1
-        self.state["age_hours"] = device.age
+        bottom = self.query_one("#bottom", BottomBar)
+        bottom.age += 1
+        self.state["age_hours"] = bottom.age
 
     def hunger_tick(self):
-        device = self.query_one("#device", TamagotchiDevice)
-        if device.hunger > 0:
-            device.hunger -= 1
-            self.state["hunger"] = device.hunger
+        bottom = self.query_one("#bottom", BottomBar)
+        char = self.query_one("#character", Character)
+        if bottom.hunger > 0:
+            bottom.hunger -= 1
+            self.state["hunger"] = bottom.hunger
             self.update_emotion()
 
     def check_health(self):
-        device = self.query_one("#device", TamagotchiDevice)
-        if device.hunger == 0 and random.random() < 0.4:
-            device.health = max(0, device.health - 1)
-            self.state["health"] = device.health
+        bottom = self.query_one("#bottom", BottomBar)
+        if bottom.hunger == 0 and random.random() < 0.4:
+            bottom.health = max(0, bottom.health - 1)
+            self.state["health"] = bottom.health
             self.update_emotion()
 
     def update_emotion(self):
-        device = self.query_one("#device", TamagotchiDevice)
-        if device.health <= 1:
-            device.emotion = "sick"
-        elif device.hunger == 0:
-            device.emotion = "hungry"
-        elif device.hunger >= 3 and device.health >= 3:
-            device.emotion = "happy"
+        char = self.query_one("#character", Character)
+        bottom = self.query_one("#bottom", BottomBar)
+
+        if bottom.health <= 1:
+            char.emotion = "sick"
+        elif bottom.hunger == 0:
+            char.emotion = "hungry"
+        elif bottom.hunger >= 3 and bottom.health >= 3:
+            char.emotion = "happy"
         else:
-            device.emotion = "normal"
+            char.emotion = "normal"
 
     def save_game(self):
-        device = self.query_one("#device", TamagotchiDevice)
-        self.state["hunger"] = device.hunger
-        self.state["health"] = device.health
-        self.state["age_hours"] = device.age
-        self.state["weight"] = device.weight
+        bottom = self.query_one("#bottom", BottomBar)
+        self.state["hunger"] = bottom.hunger
+        self.state["health"] = bottom.health
+        self.state["age_hours"] = bottom.age
+        self.state["weight"] = bottom.weight
         self.game_data.save(self.state)
 
     def action_feed(self):
-        device = self.query_one("#device", TamagotchiDevice)
-        if device.hunger >= 4:
-            device.emotion = "happy"
+        bottom = self.query_one("#bottom", BottomBar)
+        char = self.query_one("#character", Character)
+
+        if bottom.hunger >= 4:
+            char.emotion = "happy"
             self.set_timer(1.0, lambda: self.update_emotion())
         else:
-            device.hunger = min(4, device.hunger + 1)
-            device.weight += 1
-            self.state["hunger"] = device.hunger
-            self.state["weight"] = device.weight
-            device.emotion = "happy"
+            bottom.hunger = min(4, bottom.hunger + 1)
+            bottom.weight += 1
+            self.state["hunger"] = bottom.hunger
+            self.state["weight"] = bottom.weight
+            char.emotion = "happy"
             self.set_timer(1.5, lambda: self.update_emotion())
 
 
