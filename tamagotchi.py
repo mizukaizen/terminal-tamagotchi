@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from textual.app import App, ComposeResult
-from textual.containers import Center, Vertical, Horizontal
+from textual.containers import Center, Vertical
 from textual.widgets import Static
 from textual.reactive import reactive
 
@@ -145,15 +145,9 @@ class Instructions(Static):
     """Game instructions"""
 
     def render(self) -> str:
-        return """[dim]
-  Feed Mochi every
-  5 minutes or less!
-
-  If hungry (♡♡♡♡),
-  health drops.
-
-  Keep Mochi happy!
-[/dim]"""
+        return """[dim cyan]
+     Feed Mochi every 5 minutes! If hungry (♡♡♡♡), health drops.
+[/dim cyan]"""
 
 
 class TamagotchiApp(App):
@@ -186,9 +180,8 @@ class TamagotchiApp(App):
     }
 
     Instructions {
-        width: 20;
-        margin-left: 2;
-        padding: 1;
+        text-align: center;
+        padding: 1 0 0 0;
         color: #888888;
     }
     """
@@ -208,9 +201,8 @@ class TamagotchiApp(App):
         with Center():
             with Vertical(id="container"):
                 yield Title(id="title")
-                with Horizontal():
-                    yield TamagotchiDevice(id="device")
-                    yield Instructions(id="instructions")
+                yield TamagotchiDevice(id="device")
+                yield Instructions(id="instructions")
 
     def on_mount(self):
         title = self.query_one("#title", Title)
