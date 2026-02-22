@@ -60,15 +60,14 @@ class TopBar(Static):
 
 
 class Character(Static):
-    """The floating character - bigger size"""
+    """The floating character - cute and bigger"""
 
     emotion = reactive("normal")
     char_frame = reactive(0)
-    x = reactive(35)
-    y = reactive(10)
+    x_offset = reactive(0)
 
     def on_mount(self):
-        self.set_interval(0.4, self.animate)
+        self.set_interval(0.5, self.animate)
         self.set_interval(2.0, self.move)
 
     def animate(self):
@@ -76,87 +75,48 @@ class Character(Static):
 
     def move(self):
         if random.random() < 0.5:
-            self.x = max(25, min(45, self.x + random.choice([-2, -1, 0, 1, 2])))
-        if random.random() < 0.3:
-            self.y = max(8, min(14, self.y + random.choice([-1, 0, 1])))
+            self.x_offset = max(-10, min(10, self.x_offset + random.choice([-1, 0, 1])))
 
-    def get_sprite(self) -> str:
-        """Get bigger character sprite"""
+    def get_sprite(self) -> list:
+        """Get cute character sprite lines"""
         if self.emotion == "happy":
-            return """
-      \\\\  //
-       \\\\//
-    .=======.
-    | ^   ^ |
-    |   v   |
-    |  \\_/  |
-    '======='
-      |   |
-     /     \\
-    """ if self.char_frame == 0 else """
-      //  \\\\
-       //\\\\
-    .=======.
-    | ^   ^ |
-    |   o   |
-    |  \\_/  |
-    '======='
-      |   |
-     /     \\
-    """
+            sprites = [
+                ["      \\\\  //", "       \\\\//", "     .-----.", "    ( ^   ^ )", "    (   v   )", "     \\ --- /", "      '---'", "       | |", "      /   \\"],
+                ["      //  \\\\", "       //\\\\", "     .-----.", "    ( ^   ^ )", "    (   o   )", "     \\ --- /", "      '---'", "       | |", "      /   \\"]
+            ]
         elif self.emotion == "hungry":
-            return """
-    .=======.
-    | O   O |
-    |   ~   |
-    |  ___  |
-    '======='
-      |   |
-     /     \\
-    """
+            sprites = [["     .-----.", "    ( O   O )", "    (   ~   )", "     \\  O  /", "      '---'", "       | |", "      /   \\"]]
         elif self.emotion == "sick":
-            return """
-    .=======.
-    | X   X |
-    |   ~   |
-    |  ...  |
-    '======='
-      |   |
-     /     \\
-    """
+            sprites = [["     .-----.", "    ( X   X )", "    (  ...  )", "     \\ --- /", "      '---'", "       | |", "      /   \\"]]
         else:
-            return """
-    .=======.
-    | o   o |
-    |   >   |
-    |  ___  |
-    '======='
-      |   |
-     /     \\
-    """ if self.char_frame == 0 else """
-    .=======.
-    | o   o |
-    |   <   |
-    |  ___  |
-    '======='
-      |   |
-     /     \\
-    """
+            sprites = [
+                ["     .-----.", "    ( o   o )", "    (   >   )", "     \\ --- /", "      '---'", "       | |", "      /   \\"],
+                ["     .-----.", "    ( o   o )", "    (   <   )", "     \\ --- /", "      '---'", "       | |", "      /   \\"]
+            ]
+
+        return sprites[self.char_frame % len(sprites)]
 
     def render(self) -> str:
-        sprite = self.get_sprite().strip()
-        # Position the sprite
-        lines = sprite.split('\n')
-        positioned = []
-        for i, line in enumerate(lines):
-            # Add vertical positioning
-            if i < self.y:
-                positioned.append('')
-            else:
-                # Add horizontal positioning
-                positioned.append(' ' * self.x + line)
+        """Render character centered with offset"""
+        sprite_lines = self.get_sprite()
 
-        return '\n'.join(positioned)
+        # Center the sprite with x_offset
+        centered = []
+        for line in sprite_lines:
+            centered.append(f"{line:^80}")
+
+        # Apply x_offset by adding/removing spaces
+        if self.x_offset != 0:
+            offset_centered = []
+            for line in centered:
+                if self.x_offset > 0:
+                    offset_centered.append(' ' * self.x_offset + line)
+                else:
+                    # Negative offset
+                    offset_centered.append(line[-self.x_offset:] if -self.x_offset < len(line) else line)
+            centered = offset_centered
+
+        return '\n'.join(centered)
 
 
 class BottomBar(Static):
