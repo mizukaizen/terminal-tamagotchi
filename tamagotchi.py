@@ -95,11 +95,11 @@ class Character(Static):
 
         scene_lines = []
 
-        # SKY - sun highest, clouds scattered at different heights
+        # SKY - sun at top left, clouds scattered across the screen
         scene_lines.append("  ☀️")
-        scene_lines.append("       ☁️")
-        scene_lines.append("                    ☁️")
-        scene_lines.append("            ☁️")
+        scene_lines.append("                         ☁️")
+        scene_lines.append("  " + " " * 50 + "☁️")
+        scene_lines.append("              ☁️" + " " * 30 + "☁️")
 
         # CHARACTER (Mochi) - walks left/right
         for line in char_lines:
@@ -113,12 +113,13 @@ class Character(Static):
         # Small gap
         scene_lines.append("")
 
-        # GROUND ELEMENTS - flowers and tree ON the ground
-        scene_lines.append("   🌸        🌸                🌳")
+        # GROUND ELEMENTS - flowers and trees ON the ground
+        scene_lines.append("   🌸      🌳        🌸         🌳              🌳")
 
-        # GROUND LINE - full terminal width (Textual will handle this)
-        # Using a very long line that will span the full width
+        # GROUND LINE - full terminal width
         scene_lines.append("=" * 200)
+
+        return '\n'.join(scene_lines)
 
         return '\n'.join(scene_lines)
 
