@@ -101,6 +101,10 @@ class Character(Static):
         scene_lines.append("  " + " " * 50 + "☁️")
         scene_lines.append("              ☁️" + " " * 30 + "☁️")
 
+        # More space between sky and character (makes sky feel higher)
+        scene_lines.append("")
+        scene_lines.append("")
+
         # CHARACTER (Mochi) - walks left/right
         for line in char_lines:
             if self.x_offset > 0:
