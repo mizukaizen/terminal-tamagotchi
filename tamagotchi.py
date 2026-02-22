@@ -89,34 +89,35 @@ class Character(Static):
             return "  .-.\n (o.o)\n  > ^" if self.char_frame == 0 else "  .-.\n (o.o)\n  ^ <"
 
     def render(self) -> str:
-        """Render compact, centered scene"""
+        """Render scene with proper spatial logic"""
         sprite = self.get_sprite()
         char_lines = sprite.split('\n')
 
         scene_lines = []
 
-        # SKY with sun and clouds
-        scene_lines.append("  ☀️      ☁️          ☁️")
+        # SKY - sun higher up with more clouds
+        scene_lines.append("")
+        scene_lines.append("  ☀️     ☁️       ☁️      ☁️       ☁️")
+        scene_lines.append("")
         scene_lines.append("")
 
-        # CHARACTER (Mochi) - centered with x_offset
+        # CHARACTER (Mochi) - walks left/right
         for line in char_lines:
-            # Apply x_offset for walking animation
             if self.x_offset > 0:
                 scene_lines.append(' ' * self.x_offset + line)
             elif self.x_offset < 0:
-                scene_lines.append(line)  # Let it shift left naturally
+                scene_lines.append(line)
             else:
                 scene_lines.append(line)
 
-        # Small gap before ground
+        # Small gap
         scene_lines.append("")
 
-        # GROUND LINE - horizon
-        scene_lines.append("=" * 40)
+        # GROUND ELEMENTS - flowers and tree standing ON the ground (above line)
+        scene_lines.append("   🌸        🌸                🌳")
 
-        # GROUND - flowers and tree
-        scene_lines.append(" 🌸       🌸          🌳")
+        # GROUND LINE - stretches full terminal width
+        scene_lines.append("=" * 100)
 
         # Join and let Textual center it
         return '\n'.join(scene_lines)
