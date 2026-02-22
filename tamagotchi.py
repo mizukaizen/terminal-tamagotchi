@@ -115,20 +115,25 @@ class TamagotchiDevice(Static):
         while len(centered_lines) < 3:
             centered_lines.append(' ' * 20)
 
+        # Format stats with exact spacing
+        hunger_line = f"HUNGRY: {hunger_hearts}"
+        health_line = f"HEALTH: {health_hearts}"
+        stats_line = f"AGE: {self.age:2d}h  WT: {self.weight:2d}kg"
+
         return f"""
         .-==================-.
        /                      \\
-      |    {self.name:^16}    |
+      |{self.name:^24}|
       |                        |
-      |  {centered_lines[0]}  |
-      |  {centered_lines[1]}  |
-      |  {centered_lines[2]}  |
+      |{centered_lines[0]:^24}|
+      |{centered_lines[1]:^24}|
+      |{centered_lines[2]:^24}|
       |                        |
-      | ==================     |
+      |------------------------|
       |                        |
-      |  HUNGRY: {hunger_hearts}         |
-      |  HEALTH: {health_hearts}         |
-      |  AGE: {self.age:2d}h  WT: {self.weight:2d}kg  |
+      |  {hunger_line:20}  |
+      |  {health_line:20}  |
+      |  {stats_line:20}  |
       |                        |
        \\                      /
         '-==================-'
