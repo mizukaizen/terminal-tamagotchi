@@ -84,7 +84,7 @@ class Character(Static):
         elif self.emotion == "hungry":
             return "  .-.\n (O.O)\n  ~~~"
         elif self.emotion == "sick":
-            return "  .-.\n (X.X)\n  ..."
+            return "  .-.\n (;.;)\n  ..." if self.char_frame == 0 else "  .-.\n (~.~)\n  ..."
         else:
             return "  .-.\n (o.o)\n  > ^" if self.char_frame == 0 else "  .-.\n (o.o)\n  ^ <"
 
