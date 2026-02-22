@@ -89,34 +89,33 @@ class Character(Static):
             return "  .-.\n (o.o)\n  > ^" if self.char_frame == 0 else "  .-.\n (o.o)\n  ^ <"
 
     def render(self) -> str:
-        """Render cute character with environment"""
+        """Render scene with proper sky/ground separation"""
         sprite = self.get_sprite()
         char_lines = sprite.split('\n')
 
-        # Build the scene with environment
         scene_lines = []
 
-        # Line 0-1: Sky with sun and clouds
-        scene_lines.append("  ☀️      ☁️             ☁️                    ☁️")
+        # SKY SECTION (lines 0-4)
+        scene_lines.append("   ☀️       ☁️              ☁️")
+        scene_lines.append("")
+        scene_lines.append("")
+        scene_lines.append("")
         scene_lines.append("")
 
-        # Lines 2-7: Empty space for atmosphere
-        for _ in range(6):
-            scene_lines.append("")
-
-        # Lines 8-10: Character area (centered with offset)
+        # CHARACTER SECTION (lines 5-7) - Mochi stands here
         for line in char_lines:
-            padding = 40 - len(line) // 2 + self.x_offset
+            padding = 38 + self.x_offset
             scene_lines.append(' ' * max(0, padding) + line)
 
-        # Lines 11-15: More space below
-        for _ in range(5):
-            scene_lines.append("")
+        # GROUND LINE (line 8) - Clear horizon
+        scene_lines.append("=" * 60)
 
-        # Line 16: Ground with flowers and tree
-        scene_lines.append("                   🌸      🌸          🌳")
+        # GROUND SECTION (lines 9-11) - Flowers and tree ON the ground
+        scene_lines.append("    🌸          🌸                    🌳")
+        scene_lines.append("")
+        scene_lines.append("")
 
-        # Center all lines
+        # Center everything in terminal
         centered = []
         for line in scene_lines:
             centered.append(f"{line:^80}")
