@@ -100,8 +100,8 @@ class Character(Static):
     frame = reactive(0)
     emotion = reactive("normal")
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.walking = True
 
     def on_mount(self) -> None:
@@ -142,8 +142,8 @@ class StatBar(Static):
 
     value = reactive(100)
 
-    def __init__(self, label: str, max_val: int = 100, color: str = "green"):
-        super().__init__()
+    def __init__(self, label: str, max_val: int = 100, color: str = "green", **kwargs):
+        super().__init__(**kwargs)
         self.label = label
         self.max_val = max_val
         self.color = color
@@ -187,8 +187,8 @@ class XPBar(Static):
 class MessageLog(Static):
     """Scrolling message log"""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.messages = []
         self.max_messages = 5
 
@@ -209,8 +209,8 @@ class MessageLog(Static):
 class StatsDisplay(Static):
     """Display for game statistics"""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.stats = {
             "commits": 0,
             "commands": 0,
@@ -229,8 +229,8 @@ class StatsDisplay(Static):
 class AchievementDisplay(Static):
     """Display recent achievements"""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.achievements = []
 
     def add_achievement(self, achievement: str):
@@ -315,9 +315,6 @@ class TamagotchiApp(App):
         self.state = self.game_data.load()
         self.state = self.game_data.calculate_decay(self.state)
 
-        # Check for level up
-        self.check_level_up()
-
     def compose(self) -> ComposeResult:
         """Create UI layout"""
         yield Header()
@@ -355,6 +352,9 @@ class TamagotchiApp(App):
 
     def on_mount(self) -> None:
         """Initialize app state"""
+        # Check for level up from loaded XP
+        self.check_level_up()
+
         # Update UI with loaded state
         self.update_ui()
 
