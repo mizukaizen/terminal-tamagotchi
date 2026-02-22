@@ -95,10 +95,10 @@ class Character(Static):
 
         scene_lines = []
 
-        # Add top padding to center the whole scene vertically
-        scene_lines.extend([""] * 3)
+        # Add top padding to push scene down to center
+        scene_lines.extend([""] * 6)
 
-        # SKY with sun and clouds (compact)
+        # SKY with sun and clouds
         scene_lines.append("      ☀️      ☁️          ☁️")
         scene_lines.append("")
 
@@ -117,7 +117,7 @@ class Character(Static):
         scene_lines.append("     🌸         🌸              🌳")
 
         # Bottom padding
-        scene_lines.extend([""] * 2)
+        scene_lines.extend([""] * 3)
 
         # Center all lines
         centered = [f"{line:^80}" for line in scene_lines]
