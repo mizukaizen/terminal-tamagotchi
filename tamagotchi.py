@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Terminal Tamagotchi - Mochi Edition
+Perfect centering and alignment
 """
 
 import json
@@ -26,7 +27,7 @@ class GameData:
             "age_hours": 0,
             "hunger": 4,
             "health": 4,
-            "weight": 5,  # Baby Mochi starts at 5kg
+            "weight": 5,
             "last_save": datetime.now().isoformat(),
         }
 
@@ -34,9 +35,8 @@ class GameData:
             try:
                 with open(self.save_file) as f:
                     loaded = json.load(f)
-                    # Always reset age to 0 on load (fresh start each time)
                     result = {**defaults, **{k: v for k, v in loaded.items() if k in defaults}}
-                    result["age_hours"] = 0  # Always start at age 0
+                    result["age_hours"] = 0
                     return result
             except Exception:
                 pass
@@ -56,10 +56,9 @@ class TamagotchiDevice(Static):
     health = reactive(4)
     age = reactive(0)
     weight = reactive(5)
-    name = reactive("Mochi")
     emotion = reactive("normal")
     char_frame = reactive(0)
-    char_x = reactive(6)
+    char_x = reactive(7)
 
     def on_mount(self):
         self.set_interval(0.4, self.animate)
@@ -69,9 +68,8 @@ class TamagotchiDevice(Static):
         self.char_frame = (self.char_frame + 1) % 2
 
     def move(self):
-        """Move character horizontally"""
         if random.random() < 0.6:
-            self.char_x = max(2, min(12, self.char_x + random.choice([-1, 0, 1])))
+            self.char_x = max(3, min(11, self.char_x + random.choice([-1, 0, 1])))
 
     def get_character(self) -> list:
         """Get character sprite lines"""
@@ -87,43 +85,31 @@ class TamagotchiDevice(Static):
             return ["  .-.", " (o.o)", "  > ^"] if self.char_frame == 0 else ["  .-.", " (o.o)", "  ^ <"]
 
     def render(self) -> str:
-        """Render the complete device"""
+        """Render device with perfect alignment"""
 
         # Hearts
-        hf = chr(0x2665)  # ♥
-        he = chr(0x2661)  # ♡
-        hunger_hearts = hf * self.hunger + he * (4 - self.hunger)
-        health_hearts = hf * self.health + he * (4 - self.health)
+        hf = chr(0x2665)
+        he = chr(0x2661)
+        hunger_h = hf * self.hunger + he * (4 - self.hunger)
+        health_h = hf * self.health + he * (4 - self.health)
 
-        # Build character lines with positioning
+        # Build character positioned - exactly 20 chars wide
         char = self.get_character()
-        char_line1 = " " * self.char_x + char[0]
-        char_line2 = " " * self.char_x + char[1]
-        char_line3 = " " * self.char_x + char[2]
-
-        # Pad to exactly 20 chars
-        char_line1 = f"{char_line1[:20]:20}"
-        char_line2 = f"{char_line2[:20]:20}"
-        char_line3 = f"{char_line3[:20]:20}"
-
-        # Format stats
-        hunger_line = f"HUNGRY: {hunger_hearts}"
-        health_line = f"HEALTH: {health_hearts}"
-        age_line = f"AGE: {self.age}h  WT: {self.weight}kg"
+        c1 = (" " * self.char_x + char[0])[:20].ljust(20)
+        c2 = (" " * self.char_x + char[1])[:20].ljust(20)
+        c3 = (" " * self.char_x + char[2])[:20].ljust(20)
 
         return f"""
         .-==================-.
        /                      \\
-      |  ☀️  ☁️    ☁️        |
-      |  {char_line1}  |
-      |  {char_line2}  |
-      |  {char_line3}  |
-      |  🌸       🌸      🌳  |
-      |  ~~~~~~~~~~~~~~~~~~  |
+      |  {c1}  |
+      |  {c2}  |
+      |  {c3}  |
+      |                        |
       |------------------------|
-      |  {hunger_line:20}  |
-      |  {health_line:20}  |
-      |  {age_line:20}  |
+      |  HUNGRY: {hunger_h:12}  |
+      |  HEALTH: {health_h:12}  |
+      |  AGE: {self.age}h  WT: {self.weight}kg{' ' * (7 - len(str(self.age)) - len(str(self.weight)))}  |
        \\                      /
         '-==================-'
              ___     ___
@@ -131,6 +117,13 @@ class TamagotchiDevice(Static):
             |___|   |___|
             FEED    QUIT
     """
+
+
+class EnvDecoration(Static):
+    """Static environment decorations"""
+
+    def render(self) -> str:
+        return "          ☀️    ☁️     ☁️           🌸  🌳  🌸"
 
 
 class Title(Static):
@@ -145,9 +138,7 @@ class Instructions(Static):
     """Game instructions"""
 
     def render(self) -> str:
-        return """[dim cyan]
-     Feed Mochi every 5 minutes! If hungry (♡♡♡♡), health drops.
-[/dim cyan]"""
+        return "[dim cyan]Feed Mochi every 5 minutes! If hungry (♡♡♡♡), health drops.[/dim cyan]"
 
 
 class TamagotchiApp(App):
@@ -162,13 +153,18 @@ class TamagotchiApp(App):
     #container {
         width: auto;
         height: auto;
+        align: center middle;
     }
 
     Title {
         text-align: center;
-        color: #00ffff;
-        background: #000000;
-        padding: 0;
+        width: 100%;
+    }
+
+    EnvDecoration {
+        text-align: center;
+        width: 100%;
+        padding: 0 0 1 0;
     }
 
     TamagotchiDevice {
@@ -176,13 +172,12 @@ class TamagotchiApp(App):
         height: auto;
         color: #00ff00;
         background: #000000;
-        padding: 1;
     }
 
     Instructions {
         text-align: center;
+        width: 100%;
         padding: 1 0 0 0;
-        color: #888888;
     }
     """
 
@@ -201,6 +196,7 @@ class TamagotchiApp(App):
         with Center():
             with Vertical(id="container"):
                 yield Title(id="title")
+                yield EnvDecoration(id="env")
                 yield TamagotchiDevice(id="device")
                 yield Instructions(id="instructions")
 
@@ -213,19 +209,16 @@ class TamagotchiApp(App):
         device.health = self.state["health"]
         device.age = self.state["age_hours"]
         device.weight = self.state["weight"]
-        device.name = self.state["name"]
 
         self.calculate_decay()
         self.update_emotion()
 
-        # Game loops
         self.set_interval(60.0, self.age_tick)
         self.set_interval(300.0, self.hunger_tick)
         self.set_interval(10.0, self.check_health)
         self.set_interval(10.0, self.save_game)
 
     def calculate_decay(self):
-        """Calculate decay from time passed"""
         try:
             last_save = datetime.fromisoformat(self.state["last_save"])
             now = datetime.now()
