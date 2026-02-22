@@ -97,21 +97,32 @@ class TamagotchiDevice(Static):
         hunger_hearts = hf * self.hunger + he * (4 - self.hunger)
         health_hearts = hf * self.health + he * (4 - self.health)
 
+        # Get character and center it properly
         char = self.get_character()
         char_lines = char.split('\n')
 
+        # Center each character line in 20-char space
+        centered_lines = []
+        for line in char_lines:
+            # Strip existing padding, then center
+            stripped = line.strip()
+            total_padding = 20 - len(stripped)
+            left_pad = total_padding // 2
+            centered = ' ' * left_pad + stripped
+            centered_lines.append(f"{centered:20}")
+
         # Ensure we have 3 lines
-        while len(char_lines) < 3:
-            char_lines.append(' ' * 20)
+        while len(centered_lines) < 3:
+            centered_lines.append(' ' * 20)
 
         return f"""
         .-==================-.
        /                      \\
-      |   {self.name:^18}   |
+      |    {self.name:^16}    |
       |                        |
-      |  {char_lines[0]:20}  |
-      |  {char_lines[1]:20}  |
-      |  {char_lines[2]:20}  |
+      |  {centered_lines[0]}  |
+      |  {centered_lines[1]}  |
+      |  {centered_lines[2]}  |
       |                        |
       | ==================     |
       |                        |
@@ -135,7 +146,7 @@ class TamagotchiApp(App):
     CSS = """
     Screen {
         align: center middle;
-        background: $surface;
+        background: #000000;
     }
 
     TamagotchiDevice {
