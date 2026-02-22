@@ -1,113 +1,229 @@
-# 🐲 Terminal Tamagotchi
+# 🍡 Mochi - Terminal Tamagotchi
 
-A virtual pet that lives in your terminal and reacts to your coding activity!
+A living, breathing virtual pet in your terminal! Watch Mochi explore a dynamic world with day/night cycles, weather changes, and authentic Tamagotchi gameplay.
 
-## Features
+![Mochi Screenshot](screenshot.txt)
 
-- **Animated Character**: Watch your pet walk around and react with emotions
-- **Real-time Stats**: Manage hunger, happiness, and energy levels
-- **Level System**: Earn XP and level up from 1 to 100
-- **Achievements**: Unlock milestones as you code
-- **Activity Tracking**: Tracks commits, commands, and file creation
-- **Persistent State**: Your pet remembers you between sessions
-- **Interactive Commands**: Feed, play, sleep, and code with your pet
+## 🎮 Screenshot
 
-## Installation
+```
+< MOCHI >                                      Feed: F  |  Clean: C  |  Quit: Q
+
+  ☀️
+                              ☁️
+                                                              ☁️
+                 ☁️                                    ☁️
+
+
+
+                                    .-.
+                                   (o.o)
+                                    > ^
+
+
+   🌸      🌳        🌸         🌳              🌳
+================================================================================
+
+           HUNGRY: ♥♥♥♥  |  HEALTH: ♥♥♥♥  |  AGE: 12h  |  WT: 8kg
+```
+
+## ✨ Features
+
+### 🌍 Living World
+- **Day/Night Cycle** - Sun ☀️ during day, Moon 🌙 and stars ✦★ at night
+- **Dynamic Weather** - Clear ☁️, Rain 🌧️, or Snow ❄️ that changes every few minutes
+- **Drifting Clouds** - Clouds slowly move across the sky
+- **Sleeping** - Mochi sleeps at night (10pm-6am) with peaceful Z's
+
+### 🐾 Mochi Behaviors
+- **Walking Animation** - Mochi walks left and right exploring
+- **Emotions** - Happy (^.^), Normal (o.o), Hungry (O.O), Sick (;.;)
+- **Automatic Sleeping** - Falls asleep at bedtime with closed eyes
+
+### 💩 Classic Tamagotchi Mechanics
+- **Hunger System** - 4-heart hunger meter, feed every 5 minutes
+- **Health System** - Health drops when starving or dirty, regenerates when well-cared-for
+- **Poop Mechanic** - Mochi poops when well-fed (up to 3 💩)
+- **Cleaning Required** - Must clean poop or health drops!
+- **Weight Tracking** - Mochi gains weight when fed
+
+### 🏆 Progression
+- **Age Tracking** - Age resets each session, lifetime hours persist
+- **Milestones** - Achievements at 1 day, 3 days, 1 week
+- **Lifetime Stats** - Tracks total hours lived across all sessions
+
+## 🎯 Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/mizukaizen/terminal-tamagotchi.git
+cd terminal-tamagotchi
+
 # Install dependencies
-pip install -r requirements.txt
+pip3 install textual
 
-# Make executable
-chmod +x tamagotchi.py
-```
-
-## Usage
-
-```bash
-# Run the game
+# Run Mochi!
 ./tamagotchi.py
-
-# Or with Python
-python tamagotchi.py
 ```
 
-## Controls
+Or with Python directly:
+```bash
+python3 tamagotchi.py
+```
 
-- **F** - Feed your pet (restores hunger)
-- **P** - Play with your pet (increases happiness)
-- **S** - Put pet to sleep (restores energy)
-- **C** - Code! (earn big XP rewards)
+## 🎮 How to Play
+
+### Controls
+- **F** or **Space** - Feed Mochi
+- **C** - Clean up poop 💩
 - **Q** - Quit and save
 
-## Gameplay
+### Gameplay Loop
 
-### Stats
-- **Hunger**: Decreases over time, restore by feeding
-- **Happiness**: Decreases slowly, boost by playing or coding
-- **Energy**: Consumed by activities, restore with sleep
+1. **Feed Mochi** every 5 minutes to keep hunger at ♥♥♥♥
+2. **Clean poop** when it appears (press C)
+3. **Watch health** - it regenerates when Mochi is well-fed and clean
+4. **Enjoy** - Watch Mochi walk around, clouds drift, weather change!
 
-### Earning XP
-- **Feed**: +10 XP
-- **Play**: +15 XP
-- **Sleep**: +8 XP
-- **Code**: +100-500 XP (MASSIVE rewards!)
-- **Random Events**: +30-50 XP
+### Game Mechanics
 
-### Leveling
-- Each level requires `level * 1000` XP
-- Level up restores stats and unlocks achievements
-- 100 levels total
+**Hunger (♥♥♥♥):**
+- Drops 1 heart every 5 minutes
+- Feed to restore hearts
+- At ♡♡♡♡ (empty), Mochi is starving!
 
-### Achievements
-- **First Meal**: Feed your pet for the first time
-- **First Commit**: Make your first code commit
-- **Social Butterfly**: Play with your pet
-- **Committed**: 10 commits
-- **Git Master**: 50 commits
-- **Bug Squasher**: 100 commits
-- **Rising Star**: Reach level 10
-- **Veteran Coder**: Reach level 25
-- **Master Developer**: Reach level 50
-- **LEGENDARY**: Reach level 100
+**Health (♥♥♥♥):**
+- **Decreases when:**
+  - Starving (hunger = ♡♡♡♡)
+  - Too much poop (2+ 💩)
+- **Increases when:**
+  - Well-fed (hunger >= ♥♥♥)
+  - Clean (no poop)
+  - Slowly regenerates over time
 
-## Save File
+**Poop (💩):**
+- Appears every 10 minutes when well-fed
+- Up to 3 can accumulate
+- Press **C** to clean
+- Dirty Mochi gets sick!
 
-Game state is saved to `~/.tamagotchi_save.json` automatically every 5 seconds and when you quit.
+**Weight:**
+- Starts at 5kg
+- Gains 1kg every time you feed
+- Tracks how much you've fed Mochi
 
-## Character Emotions
+**Age:**
+- **Session Age:** Resets to 0h each time you start
+- **Lifetime:** Tracks total hours across all sessions
+- Milestones unlock at 24h, 72h, 168h
 
-Your pet reacts to its stats:
-- 😊 **Happy**: When happiness > 80%
-- 😢 **Sad**: When happiness < 40%
-- 🍔 **Hungry**: When hunger < 30%
-- 💤 **Sleeping**: When energy < 30%
-- 👀 **Normal**: Default walking animation
+## 🌈 Special Features
 
-## Tips
+### Day/Night Cycle
+- **Daytime (6am-8pm):** ☀️ Sun shines, ☁️ clouds drift
+- **Nighttime (8pm-6am):** 🌙 Moon appears, ✦★✧⋆ stars twinkle
+- **Sleep Time (10pm-6am):** Mochi sleeps peacefully
 
-- Keep all stats balanced for optimal XP gain
-- Code regularly for massive XP boosts
-- Random events trigger when energy and happiness are high
-- Don't let stats drop too low or your pet will complain!
-- The pet ages in real-time even when the game is closed
+### Weather System
+- **Clear:** Normal clouds ☁️
+- **Rainy:** Rain clouds 🌧️ with water drops 💧
+- **Snowy:** Snowflakes ❄️ falling
+- Changes randomly every 2 minutes
 
-## Example Session
+### Milestones
+- **1 Day Old (24h):** ★ Achievement notification
+- **3 Days Old (72h):** ★ Achievement notification
+- **1 Week Old (168h):** ★★ Special achievement!
 
+## 💾 Save System
+
+- Auto-saves every 10 seconds
+- Save file: `~/.tamagotchi_save.json`
+- Persists: hunger, health, weight, lifetime hours, milestones
+- Age resets each session (fresh start)
+
+## 🎨 Visual Styles
+
+**Mochi's Emotions:**
 ```
-╭──────────────────────────────────╮
-│  🐲 Lofty (Level 12)             │
-│  ████████░░░  XP: 2450/3000     │
-│        ╭───╮                     │
-│        │👀 │ ← walking around     │
-│        ╰───╯                     │
-│  Hunger: █████░░░ 50%             │
-│  Happy:  ████████░ 80%            │
-│  Energy: ██████░░░ 60%            │
-│  > SHIPPED! +500 XP 🎉            │
-╰──────────────────────────────────╯
+Happy:    \o/        Hungry:   .-.
+         (^.^)                (O.O)
+          > <                  ~~~
+
+Sick:     .-.        Sleeping:  .-.
+         (;.;)                 (- -)
+          ...                 z z z
 ```
 
-## License
+**Weather:**
+```
+Clear:  ☁️  ☁️  ☁️
+Rain:   🌧️  💧  🌧️
+Snow:   ❄️  ❄️  ❄️
+```
 
-MIT - Have fun! 🎮
+## 🌟 Tips
+
+1. **Check often** - Hunger drops every 5 minutes!
+2. **Clean regularly** - Poop buildup makes Mochi sick
+3. **Keep well-fed** - Health regenerates when hunger >= 3 hearts
+4. **Watch at night** - See Mochi sleep peacefully
+5. **Catch weather** - Rain and snow are rare events!
+6. **Reach milestones** - Keep Mochi alive to unlock achievements
+
+## 🐛 Troubleshooting
+
+**Mochi looks sick (;.;):**
+- Feed if hungry
+- Clean if there's poop
+- Health will regenerate when well-cared-for
+
+**No movement:**
+- Mochi walks every 2 seconds
+- Clouds drift every 3 seconds
+- Just wait and watch!
+
+**Old save data:**
+```bash
+rm ~/.tamagotchi_save.json
+```
+
+## 📊 Stats Explained
+
+- **HUNGRY:** Feed meter - keep at ♥♥♥♥
+- **HEALTH:** Regenerates when well-fed and clean
+- **AGE:** Hours in current session (resets on restart)
+- **WT:** Weight in kg (increases when fed)
+- **Life:** Total lifetime hours (in parentheses)
+
+## 🎯 Requirements
+
+- Python 3.8+
+- Textual library
+- Terminal with emoji support
+- Recommended: 80x24 minimum terminal size
+
+## 🚀 Quick Start
+
+```bash
+./tamagotchi.py
+```
+
+That's it! Keep Mochi fed, clean, and happy! 🍡
+
+## 📝 License
+
+MIT - Made with ❤️ for virtual pet lovers
+
+---
+
+**Pro tip:** Run Mochi in a tmux/screen session so it keeps running even when you disconnect! Your pet will age in real-time.
+
+```bash
+tmux new -s mochi
+./tamagotchi.py
+# Detach: Ctrl+B, then D
+# Reattach: tmux attach -s mochi
+```
+
+Enjoy your new digital companion! 🌟
