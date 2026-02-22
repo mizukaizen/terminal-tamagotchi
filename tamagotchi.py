@@ -21,14 +21,7 @@ class GameData:
         self.save_file = save_file
 
     def load(self) -> dict:
-        if self.save_file.exists():
-            try:
-                with open(self.save_file) as f:
-                    return json.load(f)
-            except Exception:
-                pass
-
-        return {
+        defaults = {
             "name": "Blob",
             "age_hours": 0,
             "hunger": 4,  # 0-4 hearts
@@ -38,6 +31,17 @@ class GameData:
             "discipline": 2,
             "last_save": datetime.now().isoformat(),
         }
+
+        if self.save_file.exists():
+            try:
+                with open(self.save_file) as f:
+                    loaded = json.load(f)
+                    # Merge with defaults to handle old save formats
+                    return {**defaults, **{k: v for k, v in loaded.items() if k in defaults}}
+            except Exception:
+                pass
+
+        return defaults
 
     def save(self, data: dict):
         data["last_save"] = datetime.now().isoformat()
