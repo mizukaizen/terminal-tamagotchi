@@ -22,7 +22,7 @@ class GameData:
 
     def load(self) -> dict:
         defaults = {
-            "name": "Blob",
+            "name": "Mochi",
             "age_hours": 0,
             "hunger": 4,
             "health": 4,
@@ -137,11 +137,10 @@ class TamagotchiDevice(Static):
       |                        |
        \\                      /
         '-==================-'
-               ___   ___
-              |   | |   |
-              | F | | Q |
-              |___| |___|
-           FEED    QUIT
+             ___     ___
+            | F |   | Q |
+            |___|   |___|
+            FEED    QUIT
     """
 
 
