@@ -60,22 +60,35 @@ class TopBar(Static):
 
 
 class Character(Static):
-    """The floating character - cute and bigger"""
+    """The floating character with drifting clouds"""
 
     emotion = reactive("normal")
     char_frame = reactive(0)
     x_offset = reactive(0)
+    cloud1_x = reactive(30)
+    cloud2_x = reactive(60)
+    cloud3_x = reactive(15)
+    cloud4_x = reactive(50)
 
     def on_mount(self):
         self.set_interval(0.5, self.animate)
         self.set_interval(2.0, self.move)
+        self.set_interval(3.0, self.drift_clouds)
 
     def animate(self):
         self.char_frame = (self.char_frame + 1) % 2
 
     def move(self):
-        if random.random() < 0.5:
-            self.x_offset = max(-10, min(10, self.x_offset + random.choice([-1, 0, 1])))
+        """Move Mochi left and right"""
+        if random.random() < 0.6:
+            self.x_offset = max(-15, min(15, self.x_offset + random.choice([-2, -1, 0, 1, 2])))
+
+    def drift_clouds(self):
+        """Slowly drift clouds across the sky"""
+        self.cloud1_x = (self.cloud1_x + 1) % 80
+        self.cloud2_x = (self.cloud2_x + 1) % 80
+        self.cloud3_x = (self.cloud3_x + 2) % 80  # Faster
+        self.cloud4_x = (self.cloud4_x + 1) % 80
 
     def get_sprite(self) -> str:
         """Get original cute character sprite"""
@@ -95,24 +108,21 @@ class Character(Static):
 
         scene_lines = []
 
-        # SKY - sun at top left, clouds widely scattered
+        # SKY - sun at top, drifting clouds at different positions
         scene_lines.append("  ☀️")
-        scene_lines.append(" " * 30 + "☁️")
-        scene_lines.append(" " * 60 + "☁️")
-        scene_lines.append(" " * 15 + "☁️" + " " * 50 + "☁️")
+        scene_lines.append(" " * self.cloud1_x + "☁️")
+        scene_lines.append(" " * self.cloud2_x + "☁️")
+        scene_lines.append(" " * self.cloud3_x + "☁️" + " " * abs(self.cloud4_x - self.cloud3_x - 10) + "☁️")
 
-        # More space between sky and character (makes sky feel higher)
+        # More space between sky and character
         scene_lines.append("")
         scene_lines.append("")
 
-        # CHARACTER (Mochi) - walks left/right
+        # CHARACTER (Mochi) - walks left/right with proper offset
+        base_position = 38
         for line in char_lines:
-            if self.x_offset > 0:
-                scene_lines.append(' ' * self.x_offset + line)
-            elif self.x_offset < 0:
-                scene_lines.append(line)
-            else:
-                scene_lines.append(line)
+            actual_pos = base_position + self.x_offset
+            scene_lines.append(' ' * max(0, actual_pos) + line)
 
         # Small gap
         scene_lines.append("")
