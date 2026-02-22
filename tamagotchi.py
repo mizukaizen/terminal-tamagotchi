@@ -89,17 +89,17 @@ class Character(Static):
             return "  .-.\n (o.o)\n  > ^" if self.char_frame == 0 else "  .-.\n (o.o)\n  ^ <"
 
     def render(self) -> str:
-        """Render scene with proper spatial logic"""
+        """Render scene with scattered clouds and full-width ground"""
         sprite = self.get_sprite()
         char_lines = sprite.split('\n')
 
         scene_lines = []
 
-        # SKY - sun higher up with more clouds
-        scene_lines.append("")
-        scene_lines.append("  ☀️     ☁️       ☁️      ☁️       ☁️")
-        scene_lines.append("")
-        scene_lines.append("")
+        # SKY - sun highest, clouds scattered at different heights
+        scene_lines.append("  ☀️")
+        scene_lines.append("       ☁️")
+        scene_lines.append("                    ☁️")
+        scene_lines.append("            ☁️")
 
         # CHARACTER (Mochi) - walks left/right
         for line in char_lines:
@@ -113,13 +113,13 @@ class Character(Static):
         # Small gap
         scene_lines.append("")
 
-        # GROUND ELEMENTS - flowers and tree standing ON the ground (above line)
+        # GROUND ELEMENTS - flowers and tree ON the ground
         scene_lines.append("   🌸        🌸                🌳")
 
-        # GROUND LINE - stretches full terminal width
-        scene_lines.append("=" * 100)
+        # GROUND LINE - full terminal width (Textual will handle this)
+        # Using a very long line that will span the full width
+        scene_lines.append("=" * 200)
 
-        # Join and let Textual center it
         return '\n'.join(scene_lines)
 
 
