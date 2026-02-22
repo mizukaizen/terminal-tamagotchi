@@ -95,34 +95,31 @@ class Character(Static):
 
         scene_lines = []
 
-        # Add top padding to push scene down to center
-        scene_lines.extend([""] * 6)
-
         # SKY with sun and clouds
-        scene_lines.append("      ☀️      ☁️          ☁️")
+        scene_lines.append("  ☀️      ☁️          ☁️")
         scene_lines.append("")
 
-        # CHARACTER (Mochi) - walks left/right
+        # CHARACTER (Mochi) - centered with x_offset
         for line in char_lines:
-            padding = 38 + self.x_offset
-            scene_lines.append(' ' * max(0, padding) + line)
+            # Apply x_offset for walking animation
+            if self.x_offset > 0:
+                scene_lines.append(' ' * self.x_offset + line)
+            elif self.x_offset < 0:
+                scene_lines.append(line)  # Let it shift left naturally
+            else:
+                scene_lines.append(line)
 
         # Small gap before ground
         scene_lines.append("")
 
         # GROUND LINE - horizon
-        scene_lines.append("=" * 50)
+        scene_lines.append("=" * 40)
 
         # GROUND - flowers and tree
-        scene_lines.append("     🌸         🌸              🌳")
+        scene_lines.append(" 🌸       🌸          🌳")
 
-        # Bottom padding
-        scene_lines.extend([""] * 3)
-
-        # Center all lines
-        centered = [f"{line:^80}" for line in scene_lines]
-
-        return '\n'.join(centered)
+        # Join and let Textual center it
+        return '\n'.join(scene_lines)
 
 
 class BottomBar(Static):
@@ -146,26 +143,31 @@ class TamagotchiApp(App):
 
     CSS = """
     Screen {
+        align: center middle;
         background: #000000;
     }
 
     TopBar {
         dock: top;
         height: 1;
+        width: 100%;
         background: #000000;
         color: #00ff00;
         padding: 0 2;
     }
 
     Character {
-        height: 100%;
+        width: 100%;
+        height: auto;
         background: #000000;
         color: #00ff00;
+        content-align: center middle;
     }
 
     BottomBar {
         dock: bottom;
         height: 1;
+        width: 100%;
         background: #000000;
         color: #00ff00;
         text-align: center;
