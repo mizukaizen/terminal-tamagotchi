@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Terminal Tamagotchi - Authentic design with on-screen buttons
+Terminal Tamagotchi - Mochi Edition
 """
 
 import json
@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from textual.app import App, ComposeResult
-from textual.containers import Center
+from textual.containers import Center, Vertical
 from textual.widgets import Static
 from textual.reactive import reactive
 
@@ -47,46 +47,46 @@ class GameData:
 
 
 class TamagotchiDevice(Static):
-    """The complete Tamagotchi device with screen and buttons"""
+    """The complete Tamagotchi device"""
 
     hunger = reactive(4)
     health = reactive(4)
     age = reactive(0)
     weight = reactive(10)
-    name = reactive("Blob")
+    name = reactive("Mochi")
     emotion = reactive("normal")
     char_frame = reactive(0)
-    char_pos = reactive(8)
+    char_x = reactive(8)
+    char_y = reactive(2)
 
     def on_mount(self):
-        self.set_interval(0.5, self.animate)
-        self.set_interval(3.0, self.move)
+        self.set_interval(0.4, self.animate)
+        self.set_interval(2.0, self.move)
 
     def animate(self):
         self.char_frame = (self.char_frame + 1) % 2
 
     def move(self):
-        if random.random() < 0.5:
-            direction = random.choice([-1, 1])
-            self.char_pos = max(3, min(12, self.char_pos + direction))
+        """Move character around the screen"""
+        if random.random() < 0.6:
+            # Move horizontally
+            self.char_x = max(1, min(14, self.char_x + random.choice([-1, 0, 1])))
+            # Sometimes move vertically
+            if random.random() < 0.3:
+                self.char_y = max(0, min(3, self.char_y + random.choice([-1, 1])))
 
-    def get_character(self) -> str:
-        """Get character sprite"""
+    def get_character(self) -> list:
+        """Get character sprite lines"""
         if self.emotion == "happy":
-            chars = ["  \\o/\n (^.^)\n  > <", "  \\o/\n (^o^)\n  < >"]
+            return ["  \\o/", " (^.^)", "  > <"] if self.char_frame == 0 else ["  \\o/", " (^o^)", "  < >"]
         elif self.emotion == "hungry":
-            chars = ["  .-.\n (O.O)\n  ~~~", "  .-.\n (@.@)\n  > <"]
+            return ["  .-.", " (O.O)", "  ~~~"] if self.char_frame == 0 else ["  .-.", " (@.@)", "  > <"]
         elif self.emotion == "sick":
-            chars = ["  .-.\n (X.X)\n  ..."]
+            return ["  .-.", " (X.X)", "  ..."]
         elif self.emotion == "sleep":
-            chars = ["  .-.\n (- -)\n z z z"]
+            return ["  .-.", " (- -)", " z z z"]
         else:
-            chars = ["  .-.\n (o.o)\n  > ^", "  .-.\n (o.o)\n  ^ <"]
-
-        char = chars[self.char_frame % len(chars)]
-        lines = char.split('\n')
-        padding = ' ' * self.char_pos
-        return '\n'.join(padding + line for line in lines)
+            return ["  .-.", " (o.o)", "  > ^"] if self.char_frame == 0 else ["  .-.", " (o.o)", "  ^ <"]
 
     def render(self) -> str:
         """Render the complete device"""
@@ -97,44 +97,53 @@ class TamagotchiDevice(Static):
         hunger_hearts = hf * self.hunger + he * (4 - self.hunger)
         health_hearts = hf * self.health + he * (4 - self.health)
 
-        # Get character and center it properly
-        char = self.get_character()
-        char_lines = char.split('\n')
+        # Create the environment with tree and sun
+        env_lines = [
+            "    o                   ",  # Sun
+            "                        ",
+            "        /\\              ",  # Tree
+            "       /  \\             ",
+            "      /____\\            ",
+            "        ||              ",
+        ]
 
-        # Center each character line in 20-char space
-        centered_lines = []
-        for line in char_lines:
-            # Strip existing padding, then center
-            stripped = line.strip()
-            total_padding = 20 - len(stripped)
-            left_pad = total_padding // 2
-            centered = ' ' * left_pad + stripped
-            centered_lines.append(f"{centered:20}")
+        # Place character in the environment
+        char_sprite = self.get_character()
 
-        # Ensure we have 3 lines
-        while len(centered_lines) < 3:
-            centered_lines.append(' ' * 20)
+        # Position character in one of the environment lines
+        display_lines = env_lines.copy()
+        char_y_pos = min(self.char_y, len(display_lines) - 3)
 
-        # Format stats with exact spacing
+        for i, char_line in enumerate(char_sprite):
+            line_idx = char_y_pos + i
+            if line_idx < len(display_lines):
+                # Insert character at x position
+                env_line = list(display_lines[line_idx])
+                for j, c in enumerate(char_line.strip()):
+                    pos = self.char_x + j
+                    if pos < len(env_line):
+                        env_line[pos] = c
+                display_lines[line_idx] = ''.join(env_line)
+
+        # Format stats
         hunger_line = f"HUNGRY: {hunger_hearts}"
         health_line = f"HEALTH: {health_hearts}"
-        stats_line = f"AGE: {self.age:2d}h  WT: {self.weight:2d}kg"
+        age_line = f"AGE: {self.age}h  WT: {self.weight}kg"
 
         return f"""
         .-==================-.
        /                      \\
-      |{self.name:^24}|
-      |                        |
-      |{centered_lines[0]:^24}|
-      |{centered_lines[1]:^24}|
-      |{centered_lines[2]:^24}|
+      |  {display_lines[0]}  |
+      |  {display_lines[1]}  |
+      |  {display_lines[2]}  |
+      |  {display_lines[3]}  |
+      |  {display_lines[4]}  |
+      |  {display_lines[5]}  |
       |                        |
       |------------------------|
-      |                        |
       |  {hunger_line:20}  |
       |  {health_line:20}  |
-      |  {stats_line:20}  |
-      |                        |
+      |  {age_line:20}  |
        \\                      /
         '-==================-'
              ___     ___
@@ -142,6 +151,14 @@ class TamagotchiDevice(Static):
             |___|   |___|
             FEED    QUIT
     """
+
+
+class Title(Static):
+    """Title display"""
+    name = reactive("Mochi")
+
+    def render(self) -> str:
+        return f"[bold cyan]{self.name:^30}[/bold cyan]"
 
 
 class TamagotchiApp(App):
@@ -153,19 +170,31 @@ class TamagotchiApp(App):
         background: #000000;
     }
 
+    #container {
+        width: auto;
+        height: auto;
+    }
+
+    Title {
+        text-align: center;
+        color: #00ffff;
+        background: #000000;
+        padding: 0 0 1 0;
+    }
+
     TamagotchiDevice {
         width: auto;
         height: auto;
         color: #00ff00;
         background: #000000;
-        padding: 2;
+        padding: 1;
     }
     """
 
     BINDINGS = [
-        ("f", "feed", "Feed"),
-        ("space", "feed", "Feed"),
-        ("q", "quit", "Quit"),
+        ("f", "feed", "Feed (F)"),
+        ("space", "feed", "Feed (Space)"),
+        ("q", "quit", "Quit (Q)"),
     ]
 
     def __init__(self):
@@ -175,10 +204,15 @@ class TamagotchiApp(App):
 
     def compose(self) -> ComposeResult:
         with Center():
-            yield TamagotchiDevice(id="device")
+            with Vertical(id="container"):
+                yield Title(id="title")
+                yield TamagotchiDevice(id="device")
 
     def on_mount(self):
+        title = self.query_one("#title", Title)
         device = self.query_one("#device", TamagotchiDevice)
+
+        title.name = self.state["name"]
         device.hunger = self.state["hunger"]
         device.health = self.state["health"]
         device.age = self.state["age_hours"]
@@ -190,7 +224,7 @@ class TamagotchiApp(App):
 
         # Game loops
         self.set_interval(60.0, self.age_tick)
-        self.set_interval(300.0, self.hunger_tick)  # Hunger drops every 5 min
+        self.set_interval(300.0, self.hunger_tick)
         self.set_interval(10.0, self.check_health)
         self.set_interval(10.0, self.save_game)
 
@@ -200,9 +234,8 @@ class TamagotchiApp(App):
             last_save = datetime.fromisoformat(self.state["last_save"])
             now = datetime.now()
             minutes_passed = (now - last_save).total_seconds() / 60
-
-            # Lose 1 hunger every 5 minutes
             hunger_loss = int(minutes_passed / 5)
+
             device = self.query_one("#device", TamagotchiDevice)
             device.hunger = max(0, device.hunger - hunger_loss)
             self.state["hunger"] = device.hunger
@@ -210,13 +243,11 @@ class TamagotchiApp(App):
             pass
 
     def age_tick(self):
-        """Age the pet"""
         device = self.query_one("#device", TamagotchiDevice)
         device.age += 1
         self.state["age_hours"] = device.age
 
     def hunger_tick(self):
-        """Decrease hunger over time"""
         device = self.query_one("#device", TamagotchiDevice)
         if device.hunger > 0:
             device.hunger -= 1
@@ -224,9 +255,7 @@ class TamagotchiApp(App):
             self.update_emotion()
 
     def check_health(self):
-        """If starving, lose health"""
         device = self.query_one("#device", TamagotchiDevice)
-
         if device.hunger == 0:
             if random.random() < 0.4:
                 device.health = max(0, device.health - 1)
@@ -234,9 +263,7 @@ class TamagotchiApp(App):
                 self.update_emotion()
 
     def update_emotion(self):
-        """Update character emotion"""
         device = self.query_one("#device", TamagotchiDevice)
-
         if device.health <= 1:
             device.emotion = "sick"
         elif device.hunger == 0:
@@ -247,7 +274,6 @@ class TamagotchiApp(App):
             device.emotion = "normal"
 
     def save_game(self):
-        """Save state"""
         device = self.query_one("#device", TamagotchiDevice)
         self.state["hunger"] = device.hunger
         self.state["health"] = device.health
@@ -256,9 +282,7 @@ class TamagotchiApp(App):
         self.game_data.save(self.state)
 
     def action_feed(self):
-        """Feed the pet"""
         device = self.query_one("#device", TamagotchiDevice)
-
         if device.hunger >= 4:
             device.emotion = "happy"
             self.set_timer(1.0, lambda: self.update_emotion())
@@ -267,7 +291,6 @@ class TamagotchiApp(App):
             device.weight += 1
             self.state["hunger"] = device.hunger
             self.state["weight"] = device.weight
-
             device.emotion = "happy"
             self.set_timer(1.5, lambda: self.update_emotion())
 
