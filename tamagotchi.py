@@ -77,46 +77,33 @@ class Character(Static):
         if random.random() < 0.5:
             self.x_offset = max(-10, min(10, self.x_offset + random.choice([-1, 0, 1])))
 
-    def get_sprite(self) -> list:
-        """Get cute character sprite lines"""
+    def get_sprite(self) -> str:
+        """Get original cute character sprite"""
         if self.emotion == "happy":
-            sprites = [
-                ["      \\\\  //", "       \\\\//", "     .-----.", "    ( ^   ^ )", "    (   v   )", "     \\ --- /", "      '---'", "       | |", "      /   \\"],
-                ["      //  \\\\", "       //\\\\", "     .-----.", "    ( ^   ^ )", "    (   o   )", "     \\ --- /", "      '---'", "       | |", "      /   \\"]
-            ]
+            return "  \\o/\n (^.^)\n  > <" if self.char_frame == 0 else "  \\o/\n (^o^)\n  < >"
         elif self.emotion == "hungry":
-            sprites = [["     .-----.", "    ( O   O )", "    (   ~   )", "     \\  O  /", "      '---'", "       | |", "      /   \\"]]
+            return "  .-.\n (O.O)\n  ~~~"
         elif self.emotion == "sick":
-            sprites = [["     .-----.", "    ( X   X )", "    (  ...  )", "     \\ --- /", "      '---'", "       | |", "      /   \\"]]
+            return "  .-.\n (X.X)\n  ..."
         else:
-            sprites = [
-                ["     .-----.", "    ( o   o )", "    (   >   )", "     \\ --- /", "      '---'", "       | |", "      /   \\"],
-                ["     .-----.", "    ( o   o )", "    (   <   )", "     \\ --- /", "      '---'", "       | |", "      /   \\"]
-            ]
-
-        return sprites[self.char_frame % len(sprites)]
+            return "  .-.\n (o.o)\n  > ^" if self.char_frame == 0 else "  .-.\n (o.o)\n  ^ <"
 
     def render(self) -> str:
-        """Render character centered with offset"""
-        sprite_lines = self.get_sprite()
+        """Render cute character centered"""
+        sprite = self.get_sprite()
+        lines = sprite.split('\n')
 
-        # Center the sprite with x_offset
-        centered = []
-        for line in sprite_lines:
-            centered.append(f"{line:^80}")
+        # Center each line with offset for movement
+        centered_lines = []
+        for line in lines:
+            # Center in 80-char width, then apply x_offset
+            padding = 40 - len(line) // 2 + self.x_offset
+            centered_lines.append(' ' * max(0, padding) + line)
 
-        # Apply x_offset by adding/removing spaces
-        if self.x_offset != 0:
-            offset_centered = []
-            for line in centered:
-                if self.x_offset > 0:
-                    offset_centered.append(' ' * self.x_offset + line)
-                else:
-                    # Negative offset
-                    offset_centered.append(line[-self.x_offset:] if -self.x_offset < len(line) else line)
-            centered = offset_centered
+        # Add vertical centering (put character in middle of screen)
+        vertical_padding = '\n' * 8  # Push down from top
 
-        return '\n'.join(centered)
+        return vertical_padding + '\n'.join(centered_lines)
 
 
 class BottomBar(Static):
