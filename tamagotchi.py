@@ -67,11 +67,11 @@ class TamagotchiDevice(Static):
         self.char_frame = (self.char_frame + 1) % 2
 
     def move(self):
-        """Move character around the screen - stay in upper area"""
+        """Move character around the screen - stay in sky area only"""
         if random.random() < 0.6:
-            # Move horizontally in the sky area
-            self.char_x = max(1, min(13, self.char_x + random.choice([-1, 0, 1])))
-            # Sometimes move vertically (but stay in sky, not on ground)
+            # Move horizontally in the sky area (avoid tree on right)
+            self.char_x = max(2, min(12, self.char_x + random.choice([-1, 0, 1])))
+            # Sometimes move vertically (stay in lines 0-2, away from ground)
             if random.random() < 0.2:
                 self.char_y = max(0, min(2, self.char_y + random.choice([-1, 1])))
 
@@ -97,17 +97,17 @@ class TamagotchiDevice(Static):
         hunger_hearts = hf * self.hunger + he * (4 - self.hunger)
         health_hearts = hf * self.health + he * (4 - self.health)
 
-        # Create environment with depth - EXACTLY 20 chars per line
+        # Create environment with emojis - rich landscape
         env_lines = [
-            "  o                 ",  # Line 0: Sun in sky
-            "                    ",  # Line 1: Sky (Mochi roams here)
+            "  ☀️     ☁️          ",  # Line 0: Sun and cloud
+            "      ☁️             ",  # Line 1: Cloud (Mochi roams here)
             "                    ",  # Line 2: Sky (Mochi roams here)
-            "                    ",  # Line 3: Upper ground
-            " /\\  /\\        /\\  ",  # Line 4: Horizon with distant trees
-            "~~~~      ~~~~  /\\  ",  # Line 5: Ground with tree (bottom right)
+            "                    ",  # Line 3: Sky
+            "  🌸      🌸    🌳  ",  # Line 4: Flowers and tree
+            "~~~~~~~~~~~~~~~~~~~~",  # Line 5: Ground/grass
         ]
 
-        # Force exact width of 20
+        # Force exact width of 20 (emojis count as 2 chars each usually)
         env_lines = [line[:20].ljust(20) for line in env_lines]
 
         # Place character in the environment
@@ -163,7 +163,8 @@ class Title(Static):
     name = reactive("Mochi")
 
     def render(self) -> str:
-        return f"[bold cyan]         {self.name}[/bold cyan]"
+        # Center it to match the device width
+        return f"[bold cyan]{self.name:^32}[/bold cyan]"
 
 
 class TamagotchiApp(App):
