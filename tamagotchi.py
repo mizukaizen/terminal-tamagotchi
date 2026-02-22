@@ -81,20 +81,26 @@ class GameData:
 
 
 class Character(Static):
-    """Animated character widget"""
+    """Animated character widget - pure ASCII Tamagotchi"""
 
-    # Animation frames
+    # Cute blob-like Tamagotchi character - walking animation (pure ASCII)
     FRAMES = [
-        "  🐲\n (👀)\n  ||",
-        "  🐲\n (👀)\n  /\\",
-        "  🐲\n (👀)\n  ||",
-        "  🐲\n (👀)\n  \\/",
+        # Frame 1 - standing
+        "    ___\n   /o o\\\n  (  >  )\n   \\_^_/",
+        # Frame 2 - step right
+        "    ___\n   /o o\\\n  (  >  )\n    \\_^_\\",
+        # Frame 3 - standing
+        "    ___\n   /o o\\\n  (  >  )\n   \\_^_/",
+        # Frame 4 - step left
+        "    ___\n   /o o\\\n  (  >  )\n   /_^_/",
     ]
 
-    SLEEPING = "  🐲\n (💤)\n  ||"
-    HAPPY = "  🐲\n (😊)\n  ||"
-    SAD = "  🐲\n (😢)\n  ||"
-    HUNGRY = "  🐲\n (🍔)\n  ||"
+    # Different emotions (pure ASCII)
+    SLEEPING = "    ___\n   /- -\\\n  (  >  )\n   \\_^_/  zzz"
+    HAPPY = "    ___\n   /^ ^\\\n  (  v  )\n   \\_^_/"
+    SAD = "    ___\n   /; ;\\\n  (  ~  )\n   \\_^_/"
+    HUNGRY = "    ___\n   /o o\\\n  (  O  )\n   \\_^_/  ???"
+    EXCITED = "    ___\n   /*-*\\\n  (  !  )\n   \\_^_/  !!!"
 
     position = reactive(0)
     frame = reactive(0)
@@ -128,6 +134,8 @@ class Character(Static):
             char = self.SAD
         elif self.emotion == "hungry":
             char = self.HUNGRY
+        elif self.emotion == "excited":
+            char = self.EXCITED
         else:
             char = self.FRAMES[self.frame]
 
@@ -135,6 +143,31 @@ class Character(Static):
         padding = " " * self.position
         lines = char.split("\n")
         return "\n".join(padding + line for line in lines)
+
+
+class Environment(Static):
+    """Background environment with trees, clouds, sun - pure ASCII"""
+
+    time_of_day = reactive("day")
+
+    def render(self) -> str:
+        """Render the environment scene"""
+        if self.time_of_day == "night":
+            sky = "    *    .    *    .    *    .    *"
+            sun = " _..._\n(     )\n '--'"
+        else:
+            sky = "   .--.     .--.        .--.     "
+            sun = "  \\   /\n   \\_/"
+
+        scene = f"""
+{sun}  {sky}
+           ^               ^
+      /\\  / \\         /\\  / \\      /\\
+     /  \\/   \\   o   /  \\/   \\    /  \\
+    /\\  /\\   /\\     /\\  /\\   /\\  /\\  /\\
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""
+        return scene
 
 
 class StatBar(Static):
@@ -219,7 +252,7 @@ class StatsDisplay(Static):
 
     def render(self) -> str:
         return (
-            f"[dim]📊 Stats:[/dim]\n"
+            f"[dim]== Stats ==[/dim]\n"
             f"  Commits: {self.stats['commits']}\n"
             f"  Commands: {self.stats['commands']}\n"
             f"  Files: {self.stats['files']}"
@@ -242,11 +275,11 @@ class AchievementDisplay(Static):
 
     def render(self) -> str:
         if not self.achievements:
-            return "[dim]🏆 No achievements yet[/dim]"
+            return "[dim]== No achievements yet ==[/dim]"
 
-        display = "[yellow bold]🏆 Achievements:[/yellow bold]\n"
+        display = "[yellow bold]== Achievements ==[/yellow bold]\n"
         for ach in self.achievements:
-            display += f"  ⭐ {ach}\n"
+            display += f"  * {ach}\n"
         return display.rstrip()
 
 
@@ -264,17 +297,30 @@ class TamagotchiApp(App):
         padding: 1 2;
     }
 
-    #pet_area {
-        border: heavy white;
-        height: 12;
-        padding: 1 2;
-        background: $panel;
+    #pet_screen {
+        border: heavy yellow;
+        border-title-color: cyan;
+        height: 20;
+        padding: 0 1;
+        background: #1a1a2e;
+    }
+
+    #environment {
+        height: 6;
+        background: #0f3460;
+    }
+
+    Character {
+        height: 4;
+        content-align: center middle;
     }
 
     #stats_area {
-        height: 8;
+        height: 6;
         padding: 1;
         margin-top: 1;
+        border: solid green;
+        background: $panel;
     }
 
     #message_area {
@@ -286,18 +332,19 @@ class TamagotchiApp(App):
     }
 
     #side_panel {
-        width: 30;
+        width: 32;
         margin-left: 1;
-    }
-
-    Character {
-        height: 5;
-        content-align: center middle;
     }
 
     .title {
         text-align: center;
         text-style: bold;
+        color: yellow;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: cyan;
     }
     """
 
@@ -322,14 +369,15 @@ class TamagotchiApp(App):
         with Container(id="main_container"):
             with Horizontal():
                 with Vertical():
-                    # Pet display area
-                    with Container(id="pet_area"):
+                    # Tamagotchi screen - egg-shaped display
+                    with Container(id="pet_screen"):
                         yield Label(
-                            f"🐲 {self.state['name']} (Level {self.state['level']})",
+                            f"=== {self.state['name'].upper()} - Level {self.state['level']} ===",
                             classes="title"
                         )
-                        yield XPBar(id="xp_bar")
+                        yield Environment(id="environment")
                         yield Character(id="character")
+                        yield XPBar(id="xp_bar")
 
                     # Stats area
                     with Container(id="stats_area"):
@@ -339,7 +387,7 @@ class TamagotchiApp(App):
 
                     # Message log
                     with Container(id="message_area"):
-                        yield Label("[bold cyan]Activity Log[/bold cyan]")
+                        yield Label("[bold cyan]═══ Activity Log ═══[/bold cyan]", classes="title")
                         yield MessageLog(id="messages")
 
                 # Side panel
@@ -368,7 +416,7 @@ class TamagotchiApp(App):
 
         # Welcome message
         messages = self.query_one("#messages", MessageLog)
-        messages.add_message(f"👋 Welcome back! {self.state['name']} missed you!", "green")
+        messages.add_message(f"*wave* Welcome back! {self.state['name']} missed you!", "green")
 
     def update_ui(self):
         """Update all UI elements with current state"""
@@ -411,13 +459,13 @@ class TamagotchiApp(App):
 
         # Check for warnings
         if self.state["hunger"] < 20 and random.random() < 0.1:
-            self.add_message("😿 I'm starving! Feed me!", "red bold")
+            self.add_message(">.< I'm starving! Feed me!", "red bold")
 
         if self.state["happiness"] < 20 and random.random() < 0.1:
-            self.add_message("😢 I'm so lonely... Play with me?", "yellow")
+            self.add_message("T_T I'm so lonely... Play with me?", "yellow")
 
         if self.state["energy"] < 20 and random.random() < 0.1:
-            self.add_message("😴 So tired... Need sleep...", "blue")
+            self.add_message("zzz So tired... Need sleep...", "blue")
 
         self.update_ui()
 
@@ -441,7 +489,7 @@ class TamagotchiApp(App):
 
         while self.state["xp"] >= xp_needed:
             self.state["level"] += 1
-            self.add_message(f"🎉 LEVEL UP! Now level {self.state['level']}!", "green bold")
+            self.add_message(f"*** LEVEL UP! Now level {self.state['level']}!", "green bold")
 
             # Restore some stats on level up
             self.state["hunger"] = min(100, self.state["hunger"] + 20)
@@ -464,7 +512,7 @@ class TamagotchiApp(App):
         """Unlock a new achievement"""
         if name not in self.state["achievements"]:
             self.state["achievements"].append(name)
-            self.add_message(f"🏆 Achievement Unlocked: {name}!", "yellow bold")
+            self.add_message(f"[TROPHY] Achievement Unlocked: {name}!", "yellow bold")
             ach_display = self.query_one("#achievements", AchievementDisplay)
             ach_display.add_achievement(name)
 
@@ -481,10 +529,10 @@ class TamagotchiApp(App):
         """Trigger random events"""
         if random.random() < 0.3:
             events = [
-                ("✨ Found a shiny bug!", 50),
-                ("🌟 Feeling inspired!", 30),
-                ("💡 Great idea!", 40),
-                ("🎨 Code looks beautiful!", 35),
+                ("* Found a shiny bug!", 50),
+                ("* Feeling inspired!", 30),
+                ("(!) Great idea!", 40),
+                ("<3 Code looks beautiful!", 35),
             ]
 
             if self.state["energy"] > 50 and self.state["happiness"] > 50:
@@ -501,13 +549,13 @@ class TamagotchiApp(App):
     def action_feed(self):
         """Feed the pet"""
         if self.state["hunger"] >= 95:
-            self.add_message("😋 I'm already full!", "yellow")
+            self.add_message("^_^ I'm already full!", "yellow")
             return
 
         self.state["hunger"] = min(100, self.state["hunger"] + 30)
         self.state["happiness"] = min(100, self.state["happiness"] + 5)
         self.add_xp(10, "Yummy!")
-        self.add_message("🍔 Nom nom nom! Thanks!", "green")
+        self.add_message("[FOOD] Nom nom nom! Thanks!", "green")
 
         # Check achievement
         if self.state["total_commands"] == 0:
@@ -519,7 +567,7 @@ class TamagotchiApp(App):
     def action_play(self):
         """Play with the pet"""
         if self.state["energy"] < 20:
-            self.add_message("😴 Too tired to play... Need sleep.", "red")
+            self.add_message("zzz Too tired to play... Need sleep.", "red")
             return
 
         self.state["happiness"] = min(100, self.state["happiness"] + 25)
@@ -527,10 +575,10 @@ class TamagotchiApp(App):
         self.add_xp(15, "Fun time!")
 
         play_messages = [
-            "🎮 Wheee! That was fun!",
-            "🎯 You got me! Hehe!",
-            "🏃 Catch me if you can!",
-            "⚽ Great play!",
+            ">-> Wheee! That was fun!",
+            "(@) You got me! Hehe!",
+            "~o~ Catch me if you can!",
+            "(o) Great play!",
         ]
         self.add_message(random.choice(play_messages), "yellow")
 
@@ -543,13 +591,13 @@ class TamagotchiApp(App):
     def action_sleep(self):
         """Put pet to sleep"""
         if self.state["energy"] >= 95:
-            self.add_message("😊 I'm not tired yet!", "cyan")
+            self.add_message(":) I'm not tired yet!", "cyan")
             return
 
         self.state["energy"] = min(100, self.state["energy"] + 40)
         self.state["hunger"] = max(0, self.state["hunger"] - 5)
         self.add_xp(8, "Good rest")
-        self.add_message("😴 Zzz... *yawn* Refreshed!", "blue")
+        self.add_message("zzz Zzz... *yawn* Refreshed!", "blue")
 
         self.state["total_commands"] += 1
         self.update_ui()
@@ -557,7 +605,7 @@ class TamagotchiApp(App):
     def action_code(self):
         """Simulate coding activity"""
         if self.state["energy"] < 15:
-            self.add_message("😫 Too exhausted to code! Need rest.", "red")
+            self.add_message("x_x Too exhausted to code! Need rest.", "red")
             return
 
         # Big rewards for coding!
@@ -567,10 +615,10 @@ class TamagotchiApp(App):
         self.state["hunger"] = max(0, self.state["hunger"] - 10)
 
         code_events = [
-            (f"SHIPPED! +{xp_gain} XP 🎉", xp_gain),
-            (f"MERGED PR! +{xp_gain} XP 🚀", xp_gain),
-            (f"FIXED BUG! +{xp_gain} XP 🐛", xp_gain),
-            (f"REFACTORED! +{xp_gain} XP ✨", xp_gain),
+            (f"SHIPPED! +{xp_gain} XP ***", xp_gain),
+            (f"MERGED PR! +{xp_gain} XP ^", xp_gain),
+            (f"FIXED BUG! +{xp_gain} XP [BUG]", xp_gain),
+            (f"REFACTORED! +{xp_gain} XP *", xp_gain),
         ]
 
         event, xp = random.choice(code_events)
