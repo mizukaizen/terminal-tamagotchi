@@ -89,36 +89,38 @@ class Character(Static):
             return "  .-.\n (o.o)\n  > ^" if self.char_frame == 0 else "  .-.\n (o.o)\n  ^ <"
 
     def render(self) -> str:
-        """Render scene with proper sky/ground separation"""
+        """Render compact, centered scene"""
         sprite = self.get_sprite()
         char_lines = sprite.split('\n')
 
         scene_lines = []
 
-        # SKY SECTION (lines 0-4)
-        scene_lines.append("   ☀️       ☁️              ☁️")
-        scene_lines.append("")
-        scene_lines.append("")
-        scene_lines.append("")
+        # Add top padding to center the whole scene vertically
+        scene_lines.extend([""] * 3)
+
+        # SKY with sun and clouds (compact)
+        scene_lines.append("      ☀️      ☁️          ☁️")
         scene_lines.append("")
 
-        # CHARACTER SECTION (lines 5-7) - Mochi stands here
+        # CHARACTER (Mochi) - walks left/right
         for line in char_lines:
             padding = 38 + self.x_offset
             scene_lines.append(' ' * max(0, padding) + line)
 
-        # GROUND LINE (line 8) - Clear horizon
-        scene_lines.append("=" * 60)
-
-        # GROUND SECTION (lines 9-11) - Flowers and tree ON the ground
-        scene_lines.append("    🌸          🌸                    🌳")
-        scene_lines.append("")
+        # Small gap before ground
         scene_lines.append("")
 
-        # Center everything in terminal
-        centered = []
-        for line in scene_lines:
-            centered.append(f"{line:^80}")
+        # GROUND LINE - horizon
+        scene_lines.append("=" * 50)
+
+        # GROUND - flowers and tree
+        scene_lines.append("     🌸         🌸              🌳")
+
+        # Bottom padding
+        scene_lines.extend([""] * 2)
+
+        # Center all lines
+        centered = [f"{line:^80}" for line in scene_lines]
 
         return '\n'.join(centered)
 
