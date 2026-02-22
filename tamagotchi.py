@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 Terminal Tamagotchi - Mochi Edition
-Perfect centering and alignment
 """
 
 import json
@@ -50,7 +49,7 @@ class GameData:
 
 
 class TamagotchiDevice(Static):
-    """The complete Tamagotchi device"""
+    """The Tamagotchi device"""
 
     hunger = reactive(4)
     health = reactive(4)
@@ -69,47 +68,48 @@ class TamagotchiDevice(Static):
 
     def move(self):
         if random.random() < 0.6:
-            self.char_x = max(3, min(11, self.char_x + random.choice([-1, 0, 1])))
+            self.char_x = max(4, min(10, self.char_x + random.choice([-1, 0, 1])))
 
     def get_character(self) -> list:
-        """Get character sprite lines"""
         if self.emotion == "happy":
             return ["  \\o/", " (^.^)", "  > <"] if self.char_frame == 0 else ["  \\o/", " (^o^)", "  < >"]
         elif self.emotion == "hungry":
             return ["  .-.", " (O.O)", "  ~~~"]
         elif self.emotion == "sick":
             return ["  .-.", " (X.X)", "  ..."]
-        elif self.emotion == "sleep":
-            return ["  .-.", " (- -)", " z z z"]
         else:
             return ["  .-.", " (o.o)", "  > ^"] if self.char_frame == 0 else ["  .-.", " (o.o)", "  ^ <"]
 
     def render(self) -> str:
-        """Render device with perfect alignment"""
-
         # Hearts
-        hf = chr(0x2665)
-        he = chr(0x2661)
+        hf, he = chr(0x2665), chr(0x2661)
         hunger_h = hf * self.hunger + he * (4 - self.hunger)
         health_h = hf * self.health + he * (4 - self.health)
 
-        # Build character positioned - exactly 20 chars wide
+        # Build character with position
         char = self.get_character()
         c1 = (" " * self.char_x + char[0])[:20].ljust(20)
         c2 = (" " * self.char_x + char[1])[:20].ljust(20)
         c3 = (" " * self.char_x + char[2])[:20].ljust(20)
 
+        # Fixed width lines
+        sky = "                    "
+        ground = "~~~~~~~~~~~~~~~~~~~~"
+
         return f"""
         .-==================-.
        /                      \\
+      |  {sky}  |
       |  {c1}  |
       |  {c2}  |
       |  {c3}  |
+      |  {sky}  |
+      |  {ground}  |
       |                        |
       |------------------------|
       |  HUNGRY: {hunger_h:12}  |
       |  HEALTH: {health_h:12}  |
-      |  AGE: {self.age}h  WT: {self.weight}kg{' ' * (7 - len(str(self.age)) - len(str(self.weight)))}  |
+      |  AGE: {self.age}h WT: {self.weight}kg{' ' * (8 - len(str(self.age)) - len(str(self.weight)))}  |
        \\                      /
         '-==================-'
              ___     ___
@@ -119,30 +119,23 @@ class TamagotchiDevice(Static):
     """
 
 
-class EnvDecoration(Static):
-    """Static environment decorations"""
-
-    def render(self) -> str:
-        return "          ☀️    ☁️     ☁️           🌸  🌳  🌸"
-
-
 class Title(Static):
-    """Title display"""
+    """Centered title"""
     name = reactive("Mochi")
 
     def render(self) -> str:
-        return f"[bold cyan]{self.name:^32}[/bold cyan]"
+        return f"[bold cyan]{self.name}[/bold cyan]"
 
 
 class Instructions(Static):
-    """Game instructions"""
+    """Bottom instructions"""
 
     def render(self) -> str:
-        return "[dim cyan]Feed Mochi every 5 minutes! If hungry (♡♡♡♡), health drops.[/dim cyan]"
+        return "[dim cyan]Feed every 5min! Hungry (♡♡♡♡) = health drops[/dim cyan]"
 
 
 class TamagotchiApp(App):
-    """Main Tamagotchi application"""
+    """Main app"""
 
     CSS = """
     Screen {
@@ -151,27 +144,19 @@ class TamagotchiApp(App):
     }
 
     #container {
-        width: auto;
-        height: auto;
         align: center middle;
     }
 
     Title {
         text-align: center;
         width: 100%;
-    }
-
-    EnvDecoration {
-        text-align: center;
-        width: 100%;
-        padding: 0 0 1 0;
+        padding: 1 0;
     }
 
     TamagotchiDevice {
-        width: auto;
-        height: auto;
         color: #00ff00;
         background: #000000;
+        text-align: center;
     }
 
     Instructions {
@@ -196,9 +181,8 @@ class TamagotchiApp(App):
         with Center():
             with Vertical(id="container"):
                 yield Title(id="title")
-                yield EnvDecoration(id="env")
                 yield TamagotchiDevice(id="device")
-                yield Instructions(id="instructions")
+                yield Instructions()
 
     def on_mount(self):
         title = self.query_one("#title", Title)
@@ -221,12 +205,9 @@ class TamagotchiApp(App):
     def calculate_decay(self):
         try:
             last_save = datetime.fromisoformat(self.state["last_save"])
-            now = datetime.now()
-            minutes_passed = (now - last_save).total_seconds() / 60
-            hunger_loss = int(minutes_passed / 5)
-
+            minutes_passed = (datetime.now() - last_save).total_seconds() / 60
             device = self.query_one("#device", TamagotchiDevice)
-            device.hunger = max(0, device.hunger - hunger_loss)
+            device.hunger = max(0, device.hunger - int(minutes_passed / 5))
             self.state["hunger"] = device.hunger
         except Exception:
             pass
@@ -245,11 +226,10 @@ class TamagotchiApp(App):
 
     def check_health(self):
         device = self.query_one("#device", TamagotchiDevice)
-        if device.hunger == 0:
-            if random.random() < 0.4:
-                device.health = max(0, device.health - 1)
-                self.state["health"] = device.health
-                self.update_emotion()
+        if device.hunger == 0 and random.random() < 0.4:
+            device.health = max(0, device.health - 1)
+            self.state["health"] = device.health
+            self.update_emotion()
 
     def update_emotion(self):
         device = self.query_one("#device", TamagotchiDevice)
