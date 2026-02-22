@@ -97,15 +97,18 @@ class TamagotchiDevice(Static):
         hunger_hearts = hf * self.hunger + he * (4 - self.hunger)
         health_hearts = hf * self.health + he * (4 - self.health)
 
-        # Create the environment with tree and sun
+        # Create environment - EXACTLY 20 chars per line (not 24, because of padding)
         env_lines = [
-            "    o                   ",  # Sun
-            "                        ",
-            "        /\\              ",  # Tree
-            "       /  \\             ",
-            "      /____\\            ",
-            "        ||              ",
+            "   o                ",  # Line 0: Sun
+            "                    ",  # Line 1: Sky
+            "      /\\            ",  # Line 2: Tree top
+            "     /  \\           ",  # Line 3: Tree mid
+            "    /____\\          ",  # Line 4: Tree base
+            "      ||            ",  # Line 5: Tree trunk
         ]
+
+        # Force exact width of 20
+        env_lines = [line[:20].ljust(20) for line in env_lines]
 
         # Place character in the environment
         char_sprite = self.get_character()
@@ -117,13 +120,15 @@ class TamagotchiDevice(Static):
         for i, char_line in enumerate(char_sprite):
             line_idx = char_y_pos + i
             if line_idx < len(display_lines):
-                # Insert character at x position
+                # Convert line to list for character placement
                 env_line = list(display_lines[line_idx])
+                # Place each character of the sprite
                 for j, c in enumerate(char_line.strip()):
                     pos = self.char_x + j
-                    if pos < len(env_line):
+                    if 0 <= pos < 20:
                         env_line[pos] = c
-                display_lines[line_idx] = ''.join(env_line)
+                # Ensure EXACTLY 20 chars
+                display_lines[line_idx] = ''.join(env_line)[:20].ljust(20)
 
         # Format stats
         hunger_line = f"HUNGRY: {hunger_hearts}"
@@ -158,7 +163,7 @@ class Title(Static):
     name = reactive("Mochi")
 
     def render(self) -> str:
-        return f"[bold cyan]{self.name:^30}[/bold cyan]"
+        return f"\n[bold cyan]{self.name:^28}[/bold cyan]"
 
 
 class TamagotchiApp(App):
@@ -179,7 +184,8 @@ class TamagotchiApp(App):
         text-align: center;
         color: #00ffff;
         background: #000000;
-        padding: 0 0 1 0;
+        padding: 0;
+        margin-bottom: 0;
     }
 
     TamagotchiDevice {
